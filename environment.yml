@@ -1,0 +1,30 @@
+name: marker-bench
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy
+  - scipy
+  - pandas
+  - scikit-learn
+  - scanpy
+  - anndata
+  - muon
+  - leidenalg
+  - python-igraph
+  - umap-learn
+  - matplotlib
+  - seaborn
+  - statsmodels
+  - pingouin
+  - h5py
+  - pyarrow
+  - scikit-misc
+  - tqdm
+  - jupyterlab
+  - ipykernel
+  - pip
+  - pip:
+      - torch
+      - captum
+      - harmonypy==0.0.9
