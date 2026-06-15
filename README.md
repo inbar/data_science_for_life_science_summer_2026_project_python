@@ -14,40 +14,53 @@ called markers, and which axis matters more? All four methods see **RNA only**; 
 protein modality is used solely to define the ground-truth driver set `D_c` per
 cell type, keeping the evaluation a genuine cross-modal test.
 
-## Repository layout
+## Quick links
 
-```
-Data_Science.pdf            original project pitch
-environment.yml             conda environment (env name: marker-bench)
-src/                        all reusable logic (imported by the notebook)
-  config.py                 paths, seeds, constants, method labels
-  data_io.py                download/extract -> cached subsampled RNA+ADT MuData
-  preprocessing.py          QC, normalization, HVGs, shared rank matrix, embeddings
-  protein_gene_map.py       curated antibody -> encoding-gene map
-  ground_truth.py           protein-derived driver sets D_c
-  scorers.py                Spearman / partial-correlation / KSG-MI
-  mlp.py                    tanh+softmax MLP + Integrated-Gradients attributions
-  metric.py                 AUC_rel driver-recovery metric
-  benchmark.py              run all methods × all cell types
-  stats.py                  Friedman + paired Wilcoxon, bootstrap/seed stability
-  plotting.py               publication figures (600 dpi, no titles)
-notebooks/
-  marker_benchmark.ipynb    the documented, end-to-end workflow
-run_pipeline.py             staged CLI driver (used to validate / precompute)
-build_cache.py              one-time heavy build of the subsampled dataset
-data/                       raw download + processed cache (not version-controlled)
-results/figures/            600 dpi PDF + PNG figures
-results/tables/             CSV result tables
-```
+* **Overleaf**
+  * https://www.overleaf.com/project/6a16a6acee7a4f9be406ed56
+
+* **Drive**  
+  * [Drive Folder](https://drive.google.com/drive/folders/1EbHnfwc--__TVGd0T7sYfsFyHT2DoH8q)  
+    * ➡️ [Pitch slides](https://docs.google.com/presentation/d/1NsWcmVj_nGgPXwznGEQuIt0szK6gWpAv6AhVMVyTu64)  
+    * ➡️ [Project presentation slides](https://docs.google.com/presentation/d/1XC8spsQxBdkZpUi3c1FwNNoBYlBeGhgpELGiPLkxLGU)  
 
 ## Reproduce
 
+### 1. Download the data
+
+Download the raw data archives and place them in the root of this repository. Subsequent scripts will look for them there. 
+
+Required files: 
+* `GSE164378_RAW.tar` ([download](https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164378/suppl/GSE164378_RAW.tar)) 
+  * Data matrices for all modalities in Matrix Market (.mtx) format 
+  * ~1.4G
+* `GSE164378_sc.meta.data_3P.csv.gz` ([download](https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164378/suppl/GSE164378_sc.meta.data_3P.csv.gz))
+  * Metadata
+  * ~3M
+* FTP Directory: https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164378/suppl/ 
+
+Alternatively:
+```
+cd <root_of_repository>
+
+# GSE164378_RAW.tar
+curl -o GSE164378_RAW.tar https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164378/suppl/GSE164378_RAW.tar
+
+# GSE164378_sc.meta.data_3P.csv.gz
+curl -o GSE164378_sc.meta.data_3P.csv.gz https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164378/suppl/GSE164378_sc.meta.data_3P.csv.gz
+```
+
+
 ```bash
 conda env create -f environment.yml
-conda activate marker-bench
+conda activate data_science_in_life_sciences_project_2026_group_1
 
-# 1. download (~1.4 GB) + build the cached 25k-cell subsample (one-time)
+# 1. Load the raw data and save a 25k-cell subsample to disk 
+# This should be run once. Subsequent runs load the data from disk.  
 python build_dataset.py
+python build_dataset.py true        # force recreation of the dataset
+
+# it is po
 
 # 2a. run the whole thing staged from the CLI ...
 python run_pipeline.py all          # prep, gt, mlp, bench, stats
@@ -55,8 +68,8 @@ python run_pipeline.py plots        # all publication figures
 python run_pipeline.py stability    # bootstrap-over-cells CIs
 python run_pipeline.py seed         # MLP/IG seed variation
 
-# 2b. ... or open the documented notebook (same src calls, with narrative)
-jupyter lab notebooks/marker_benchmark.ipynb   # kernel: Python (marker-bench)
+# 2b. ... or open the documented notebook (exact same procedure, with narrative)
+jupyter lab notebooks/marker_benchmark.ipynb   # kernel: Python (data_science_in_life_sciences_project_2026_group_1)
 ```
 
 ## Key design decisions
@@ -92,6 +105,6 @@ jupyter lab notebooks/marker_benchmark.ipynb   # kernel: Python (marker-bench)
 
 ## Environment note (Windows)
 
-Always run through the activated env (`conda activate marker-bench` or
-`conda run -n marker-bench ...`). The conda-forge BLAS depends on DLLs in the
+Always run through the activated env (`conda activate data_science_in_life_sciences_project_2026_group_1` or
+`conda run -n data_science_in_life_sciences_project_2026_group_1 ...`). The conda-forge BLAS depends on DLLs in the
 env's `Library\bin`, which is only on `PATH` when the env is activated.
