@@ -5,6 +5,7 @@ pipeline reproducible from a single import.
 """
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 
@@ -12,14 +13,18 @@ from pathlib import Path
 # Paths (resolved relative to the project root, i.e. the parent of ``src/``).
 # --------------------------------------------------------------------------- #
 ROOT = Path(__file__).resolve().parents[1]
-DATA_RAW = ROOT / "data" / "raw"
-DATA_PROC = ROOT / "data" / "processed"
-RESULTS = ROOT / "results"
-FIG_DIR = RESULTS / "figures"
-TAB_DIR = RESULTS / "tables"
+RAW_DATA_DIR_PATH = ROOT / "data" / "raw"
+PROCESSED_DATA_DIR_PATH = ROOT / "data" / "processed"
+RESULTS_DIR_PATH = ROOT / "results"
+FIGURES_DIR_PATH = RESULTS_DIR_PATH / "figures"
+TABLES_DIR_PATH = RESULTS_DIR_PATH / "tables"
 
-for _p in (DATA_RAW, DATA_PROC, RESULTS, FIG_DIR, TAB_DIR):
-    _p.mkdir(parents=True, exist_ok=True)
+for path in (RAW_DATA_DIR_PATH,
+             PROCESSED_DATA_DIR_PATH,
+             RESULTS_DIR_PATH,
+             FIGURES_DIR_PATH,
+             TABLES_DIR_PATH):
+    path.mkdir(parents=True, exist_ok=True)
 
 # --------------------------------------------------------------------------- #
 # Reproducibility
@@ -29,7 +34,10 @@ SEED = 0
 # --------------------------------------------------------------------------- #
 # Dataset / preprocessing constants
 # --------------------------------------------------------------------------- #
-N_SUBSAMPLE = 25_000          # stratified cell subsample size (pitch spec)
+
+FTP_URL = "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164378/suppl/"
+
+SUBSAMPLE_SIZE = 25_000          # stratified cell subsample size (pitch spec)
 N_HVG = 2_000                 # highly variable genes -> shared feature space
 N_PCS = 50                    # PCA components for UMAP / Harmony
 CELLTYPE_LEVELS = {           # metadata column -> human label
@@ -62,12 +70,19 @@ METHOD_GRID = {
 # --------------------------------------------------------------------------- #
 # Environment hint (the dedicated conda env created for this project)
 # --------------------------------------------------------------------------- #
-ENV_NAME = "marker-bench"
+ENV_NAME = "data_science_in_life_sciences_project_2026_group_1"
+
 
 
 def fig_path(name: str, ext: str = "pdf") -> Path:
-    return FIG_DIR / f"{name}.{ext}"
+    return FIGURES_DIR_PATH / f"{name}.{ext}"
 
 
 def tab_path(name: str, ext: str = "csv") -> Path:
-    return TAB_DIR / f"{name}.{ext}"
+    return TABLES_DIR_PATH / f"{name}.{ext}"
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
