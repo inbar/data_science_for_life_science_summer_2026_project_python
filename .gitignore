@@ -16,6 +16,7 @@ data/
 *.pth
 *.ckpt
 *.tar
+*.gz
 
 # Python
 __pycache__/
@@ -34,3 +35,6 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+
+# Intellij
+.idea/

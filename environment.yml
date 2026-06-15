@@ -1,4 +1,4 @@
-name: marker-bench
+name: data_science_in_life_sciences_project_2026_group_1
 channels:
   - conda-forge
 dependencies:
@@ -26,5 +26,6 @@ dependencies:
   - pip
   - pip:
       - torch
+      - mudata
       - captum
       - harmonypy==0.0.9
