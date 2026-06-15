@@ -47,7 +47,7 @@ conda env create -f environment.yml
 conda activate marker-bench
 
 # 1. download (~1.4 GB) + build the cached 25k-cell subsample (one-time)
-python build_cache.py
+python build_dataset.py
 
 # 2a. run the whole thing staged from the CLI ...
 python run_pipeline.py all          # prep, gt, mlp, bench, stats

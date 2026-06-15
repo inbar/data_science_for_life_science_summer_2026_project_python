@@ -22,19 +22,16 @@ the benchmark while common types still dominate. Doublets are dropped.
 from __future__ import annotations
 
 import gzip
+import logging as log
 import tarfile
 from array import array
-from typing import Any
 
 import anndata as ad
 import numpy as np
 import pandas as pd
 import scipy.io
-import logging as log
 from mudata import MuData, read_h5mu
-from numpy import dtype, ndarray
-from pandas import DataFrame, Index
-from scipy.sparse import csr_matrix
+from pandas import DataFrame
 
 import config
 
@@ -348,7 +345,7 @@ def create_or_load_dataset(dataset_file=dataset_file_path,
                                                                          seed,
                                                                          subsample_size)
 
-    # 2. Load RNA matrix    
+    # 2. Load RNA matrix
     reduced_rna_matrix = load_reduced_rna_matrix(
         extracted_files_path / rna_matrix_file_name,
         rna_barcodes,
