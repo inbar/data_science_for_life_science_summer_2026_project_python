@@ -50,6 +50,7 @@ curl -o GSE164378_RAW.tar https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE1
 curl -o GSE164378_sc.meta.data_3P.csv.gz https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164378/suppl/GSE164378_sc.meta.data_3P.csv.gz
 ```
 
+### 2. Run the code
 
 ```bash
 conda env create -f environment.yml
