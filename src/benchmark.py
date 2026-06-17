@@ -13,8 +13,8 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 
-from . import scorers
-from .metric import auc_rel
+from src import scorers
+from src.metric import auc_rel
 
 
 def compute_mi_parallel(X_ranked, labels, celltypes, n_jobs=-1,

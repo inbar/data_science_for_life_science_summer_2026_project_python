@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 
-from .protein_gene_map import map_protein_to_genes
+from src.protein_gene_map import map_protein_to_genes
 
 
 def elevated_proteins(adt, level: str, padj: float = 0.05,

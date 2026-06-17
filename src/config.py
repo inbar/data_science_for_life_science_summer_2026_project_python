@@ -6,7 +6,6 @@ pipeline reproducible from a single import.
 from __future__ import annotations
 
 import logging
-import os
 from pathlib import Path
 
 # --------------------------------------------------------------------------- #
@@ -72,8 +71,6 @@ METHOD_GRID = {
 # --------------------------------------------------------------------------- #
 ENV_NAME = "data_science_in_life_sciences_project_2026_group_1"
 
-
-
 def fig_path(name: str, ext: str = "pdf") -> Path:
     return FIGURES_DIR_PATH / f"{name}.{ext}"
 
@@ -81,8 +78,22 @@ def fig_path(name: str, ext: str = "pdf") -> Path:
 def tab_path(name: str, ext: str = "csv") -> Path:
     return TABLES_DIR_PATH / f"{name}.{ext}"
 
+
+# --------------------------------------------------------------------------- #
+# Logging
+# --------------------------------------------------------------------------- #
+
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S"
 )
+
+def set_log_level_debug():
+    logging.basicConfig(level=logging.DEBUG)
+
+def set_log_level_info():
+    logging.basicConfig(level=logging.INFO)
+
+def set_log_level_critical():
+    logging.basicConfig(level=logging.CRITICAL)

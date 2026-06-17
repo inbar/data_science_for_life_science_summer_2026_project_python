@@ -15,7 +15,7 @@ import scanpy as sc
 import scipy.sparse as sp
 from scipy.stats import rankdata
 
-from . import config
+import config
 
 
 # --------------------------------------------------------------------------- #

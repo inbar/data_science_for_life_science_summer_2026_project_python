@@ -27,13 +27,15 @@ import tarfile
 from array import array
 
 import anndata as ad
+import mudata
 import numpy as np
 import pandas as pd
 import scipy.io
-from mudata import MuData, read_h5mu
-from pandas import DataFrame
 
-import config
+from src import config
+
+# Stop annoying warning message
+mudata.set_options(pull_on_update=False)
 
 # File prefixes
 rna_prefix = "GSM5008737_RNA"
@@ -90,7 +92,7 @@ def read_features(tsv_file_path):
 
 
 def load_and_reduce_metadata(level,
-                             rna_barcodes) -> DataFrame:
+                             rna_barcodes):
     metadata = pd.read_csv(raw_metadata_path, index_col=0)
     # Filter all irrelevant lines from the metadata
     relevant_barcodes = [barcode for barcode in rna_barcodes if
@@ -102,6 +104,44 @@ def load_and_reduce_metadata(level,
     return metadata
 
 
+def select_metadata_indexes_subsample(metadata,
+                                      level,
+                                      subsample_size,
+                                      floor = 50,
+                                      seed = 0):
+    rng = np.random.default_rng(seed)
+    level_values = metadata[level]
+    value_counts = level_values.value_counts()
+    sqrt_value_counts = np.sqrt(value_counts.astype(float))
+
+    # Compute the proportional share of each value
+    proportional_counts = subsample_size * (
+        sqrt_value_counts / sqrt_value_counts.sum()
+    )
+
+    # Floor and cap the proportion
+    proportional_counts = np.maximum(proportional_counts, floor)
+    proportional_counts = np.minimum(proportional_counts,
+                                     value_counts.values).round().astype(int)
+
+    subsample_per_label = []
+    label_positions = {lab: np.where(level_values.values == lab)[0] for lab in
+                       value_counts.index}
+
+    # Randomly select proportional_count number of samples from each label
+    for label, proportional_count in zip(value_counts.index,
+                                         proportional_counts):
+        all_indexes_for_label = label_positions[label]
+        size = min(proportional_count, len(all_indexes_for_label))
+        subsample_per_label.append(
+            rng.choice(all_indexes_for_label,
+                       size=size, replace=False)
+        )
+
+    # Return a sorted list of all indexes to keep (the subsample)
+    return np.sort(np.concatenate(subsample_per_label))
+
+
 def subsample_barcodes(level,
                        metadata,
                        rna_barcodes,
@@ -111,10 +151,10 @@ def subsample_barcodes(level,
         barcode: index for index, barcode in enumerate(rna_barcodes)
     }
 
-    subsampled_metadata_indexes = generate_subsampled_metadata_indexes(metadata,
-                                                                       level,
-                                                                       subsample_size,
-                                                                       seed=seed)
+    subsampled_metadata_indexes = select_metadata_indexes_subsample(metadata,
+                                                                    level,
+                                                                    subsample_size,
+                                                                    seed=seed)
 
     # Subsample metadata
     subsampled_barcodes = metadata.index[subsampled_metadata_indexes]
@@ -235,45 +275,7 @@ def load_reduced_adt_matrix(file_path, subsampled_barcodes_indexes):
     return matrix.T.tocsr()
 
 
-def generate_subsampled_metadata_indexes(metadata,
-                                         level,
-                                         subsample_size,
-                                         floor: int = 50,
-                                         seed: int = 0) -> np.ndarray:
-    rng = np.random.default_rng(seed)
-    level_values = metadata[level]
-    value_counts = level_values.value_counts()
-    sqrt_value_counts = np.sqrt(value_counts.astype(float))
-
-    # Compute the proportional share of each value
-    proportional_counts = subsample_size * (
-        sqrt_value_counts / sqrt_value_counts.sum()
-    )
-
-    # Floor and cap the proportion
-    proportional_counts = np.maximum(proportional_counts, floor)
-    proportional_counts = np.minimum(proportional_counts,
-                                     value_counts.values).round().astype(int)
-
-    subsample_per_label = []
-    label_positions = {lab: np.where(level_values.values == lab)[0] for lab in
-                       value_counts.index}
-
-    # Randomly select proportional_count number of samples from each label
-    for label, proportional_count in zip(value_counts.index,
-                                         proportional_counts):
-        all_indexes_for_label = label_positions[label]
-        size = min(proportional_count, len(all_indexes_for_label))
-        subsample_per_label.append(
-            rng.choice(all_indexes_for_label,
-                       size=size, replace=False)
-        )
-
-    # Return a sorted list of all indexes to keep (the subsample)
-    return np.sort(np.concatenate(subsample_per_label))
-
-
-def save_mudata_dataset_to_disk(mudata: MuData, file_path):
+def save_mudata_dataset_to_disk(mudata, file_path):
     file_path.parent.mkdir(parents=True, exist_ok=True)
     mudata.write(file_path)
 
@@ -283,7 +285,7 @@ def create_mudata_dataset(metadata,
                           rna_matrix,
                           adt_matrix,
                           subsampled_barcodes,
-                          seed) -> MuData:
+                          seed):
     rna_features = read_features(extracted_files_path / rna_features_file_name)
     observations = metadata.loc[subsampled_barcodes].copy()
     rna_annotated_data = ad.AnnData(X=rna_matrix,
@@ -302,18 +304,18 @@ def create_mudata_dataset(metadata,
     rna_annotated_data.var_names_make_unique()
     adt_annotated_data.var_names_make_unique()
 
-    mdata = MuData({"rna": rna_annotated_data, "adt": adt_annotated_data})
-    mdata.uns["subsample_level"] = level
-    mdata.uns["subsample_seed"] = seed
+    dataset = mudata.MuData({"rna": rna_annotated_data, "adt": adt_annotated_data})
+    dataset.uns["subsample_level"] = level
+    dataset.uns["subsample_seed"] = seed
 
-    return mdata
+    return dataset
 
 
 def create_or_load_dataset(dataset_file=dataset_file_path,
                            subsample_size=config.SUBSAMPLE_SIZE,
                            level=config.PRIMARY_LEVEL,
                            seed=config.SEED,
-                           force=False) -> MuData:
+                           force=False) -> mudata.MuData:
     # Check if raw files exist and request download if not
     if not raw_archive_path.exists() or not raw_metadata_path.exists():
         log.error("Some of the raw data files are missing [%s, %s]",
@@ -327,7 +329,7 @@ def create_or_load_dataset(dataset_file=dataset_file_path,
     if dataset_file.exists() and not force:
         log.info("Dataset exists at %s", dataset_file)
         log.info("Loading from file [%s]", dataset_file)
-        return read_h5mu(dataset_file)
+        return mudata.read_h5mu(dataset_file)
 
     # Extract files from the main raw archive
     extract_files_from_main_archive(
@@ -342,9 +344,8 @@ def create_or_load_dataset(dataset_file=dataset_file_path,
     subsampled_barcodes, subsampled_barcode_indexes = subsample_barcodes(level,
                                                                          metadata,
                                                                          rna_barcodes,
-                                                                         seed,
-                                                                         subsample_size)
-
+                                                                         subsample_size,
+                                                                         seed)
     # 2. Load RNA matrix
     reduced_rna_matrix = load_reduced_rna_matrix(
         extracted_files_path / rna_matrix_file_name,
@@ -358,7 +359,7 @@ def create_or_load_dataset(dataset_file=dataset_file_path,
     )
 
     # 4. Create the dataset in memory
-    mudata = create_mudata_dataset(metadata,
+    dataset = create_mudata_dataset(metadata,
                                    level,
                                    reduced_rna_matrix,
                                    reduced_adt_matrix,
@@ -366,10 +367,7 @@ def create_or_load_dataset(dataset_file=dataset_file_path,
                                    seed)
 
     # 5. Save dataset to disk
-    save_mudata_dataset_to_disk(mudata,
+    save_mudata_dataset_to_disk(dataset,
                                 config.PROCESSED_DATA_DIR_PATH / dataset_file_name)
 
-    return mudata
-
-
-create_or_load_dataset()
+    return dataset

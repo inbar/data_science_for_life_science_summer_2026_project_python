@@ -17,7 +17,7 @@ import pandas as pd
 from matplotlib.lines import Line2D
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401  (registers 3d projection)
 
-from .config import FIG_DIR, METHOD_LABELS
+import config
 
 # A colour-blind-safe qualitative palette (Wong 2011).
 PALETTE = ["#0072B2", "#D55E00", "#009E73", "#CC79A7",
@@ -446,7 +446,8 @@ def scatter3d(long: pd.DataFrame, x, y, z, elev=22, azim=-60, figsize=(5.6, 4.2)
     # so the z-axis title is placed explicitly in figure coordinates (right edge).
     fig.text(0.965, 0.5, _mlabel(z), rotation=90, va="center", ha="center",
              fontsize=8)
-    ax.xaxis.pane.set_alpha(0.0); ax.yaxis.pane.set_alpha(0.0)
+    ax.xaxis.pane.set_alpha(0.0)
+    ax.yaxis.pane.set_alpha(0.0)
     ax.zaxis.pane.set_alpha(0.0)
     handles = [Line2D([0], [0], marker="o", linestyle="", markersize=4,
                       markerfacecolor=DRIVER_COLOR, markeredgecolor="none",
