@@ -1,3 +1,8 @@
+# ️WIP: code cleanup 
+1. Data download and dataset loading (`data.py`)  ✅
+2. Create a non-generated notebook (based on the existing ones) 
+3. Refactor and clean up .py scripts one by one
+
 # Benchmarking dependency measures for marker-gene identification in multi-modal single-cell data
 
 A 2×2 benchmark of dependency measures for identifying cell-type marker genes in
