@@ -53,10 +53,10 @@ raw_metadata_file_name = "GSE164378_sc.meta.data_3P.csv.gz"
 
 rna_matrix_file_name = "GSM5008737_RNA_3P-matrix.mtx.gz"
 rna_barcodes_file_name = "GSM5008737_RNA_3P-barcodes.tsv.gz"
-rna_features_file_name = "GSM5008737_RNA_3P-barcodes.tsv.gz"
+rna_features_file_name = "GSM5008737_RNA_3P-features.tsv.gz"
 
 adt_matrix_file_name = "GSM5008738_ADT_3P-matrix.mtx.gz"
-adt_barcodes_file_name = "GSM5008738_ADT_3P-features.tsv.gz"
+adt_barcodes_file_name = "GSM5008738_ADT_3P-barcodes.tsv.gz"
 adt_features_file_name = "GSM5008738_ADT_3P-features.tsv.gz"
 
 # File paths
@@ -91,6 +91,14 @@ def read_features(tsv_file_path):
     return [line.split("\t")[0] for line in tsv_lines]
 
 
+def read_rna_features():
+    return read_features(extracted_files_path / rna_features_file_name)
+
+
+def read_adt_features():
+    return read_features(extracted_files_path / adt_features_file_name)
+
+
 def load_and_reduce_metadata(level,
                              rna_barcodes):
     metadata = pd.read_csv(raw_metadata_path, index_col=0)
@@ -107,8 +115,8 @@ def load_and_reduce_metadata(level,
 def select_metadata_indexes_subsample(metadata,
                                       level,
                                       subsample_size,
-                                      floor = 50,
-                                      seed = 0):
+                                      floor=50,
+                                      seed=0):
     rng = np.random.default_rng(seed)
     level_values = metadata[level]
     value_counts = level_values.value_counts()
@@ -168,7 +176,7 @@ def subsample_barcodes(level,
     return subsampled_barcodes, subsampled_barcode_indexes
 
 
-def load_reduced_rna_matrix_by_line(file_path,
+def load_reduced_rna_matrix_by_line(mtx_file_path,
                                     old_to_new_index_map: np.ndarray,
                                     cell_count: int,
                                     gene_count: int):
@@ -185,12 +193,12 @@ def load_reduced_rna_matrix_by_line(file_path,
       rows [cell_count] x cols [gene_count]
     """
 
-    log.info("Loading RNA matrix from file [%s]", file_path)
+    log.info("Loading RNA matrix from file [%s]", mtx_file_path)
 
     rows = array("i")
     cols = array("i")
     data = array("f")
-    with gzip.open(file_path, "rt") as file:
+    with gzip.open(mtx_file_path, "rt") as file:
         for line in file:
             if line.startswith("%"):
                 continue
@@ -218,9 +226,11 @@ def load_reduced_rna_matrix_by_line(file_path,
     return sparse_matrix.tocsr()
 
 
-def load_reduced_rna_matrix(file_path,
+def load_reduced_rna_matrix(mtx_file_path,
                             rna_barcodes,
-                            subsampled_barcode_indexes):
+                            subsampled_barcode_indexes,
+                            cell_count,
+                            gene_count):
     # This is an array in the size of the original length of the data (rows)
     # Each removed row (cell) contains -1
     # Each kept row (cell) contains a consecutive number to be used as the
@@ -231,10 +241,10 @@ def load_reduced_rna_matrix(file_path,
         subsampled_barcode_indexes] = np.arange(len(subsampled_barcode_indexes))
 
     reduced_rna_matrix = load_reduced_rna_matrix_by_line(
-        file_path,
+        mtx_file_path,
         full_barcode_index_to_subset_index_map,
-        len(subsampled_barcode_indexes),
-        len(rna_barcodes))
+        cell_count,
+        gene_count)
 
     return reduced_rna_matrix
 
@@ -275,38 +285,43 @@ def load_reduced_adt_matrix(file_path, subsampled_barcodes_indexes):
     return matrix.T.tocsr()
 
 
-def save_mudata_dataset_to_disk(mudata, file_path):
+def save_mudata_dataset_to_disk(dataset, file_path):
     file_path.parent.mkdir(parents=True, exist_ok=True)
-    mudata.write(file_path)
+    dataset.write(file_path)
 
 
 def create_mudata_dataset(metadata,
                           level,
                           rna_matrix,
                           adt_matrix,
+                          rna_features,
+                          adt_features,
                           subsampled_barcodes,
                           seed):
-    rna_features = read_features(extracted_files_path / rna_features_file_name)
     observations = metadata.loc[subsampled_barcodes].copy()
     rna_annotated_data = ad.AnnData(X=rna_matrix,
                                     obs=observations.copy(),
                                     var=pd.DataFrame(
                                         index=pd.Index(rna_features,
-                                                       name="gene")))
+                                                       name="genes")))
 
-    adt_features = read_features(extracted_files_path / adt_features_file_name)
     adt_annotated_data = ad.AnnData(X=adt_matrix,
                                     obs=observations.copy(),
                                     var=pd.DataFrame(
                                         index=pd.Index(adt_features,
-                                                       name="protein")))
+                                                       name="proteins")))
 
+    rna_annotated_data.var["gene_name"] = rna_annotated_data.var_names
     rna_annotated_data.var_names_make_unique()
+
+    adt_annotated_data.var["protein_name"] = adt_annotated_data.var_names
     adt_annotated_data.var_names_make_unique()
 
-    dataset = mudata.MuData({"rna": rna_annotated_data, "adt": adt_annotated_data})
+    dataset = mudata.MuData(
+        {"rna": rna_annotated_data, "adt": adt_annotated_data})
     dataset.uns["subsample_level"] = level
     dataset.uns["subsample_seed"] = seed
+    dataset.var_names_make_unique()
 
     return dataset
 
@@ -337,6 +352,11 @@ def create_or_load_dataset(dataset_file=dataset_file_path,
         output_dir=extracted_files_path
     )
 
+    # Read features
+    rna_features = read_rna_features()
+    adt_features = read_adt_features()
+
+    # Read barcodes
     rna_barcodes = read_rna_barcodes()
     metadata = load_and_reduce_metadata(level, rna_barcodes)
 
@@ -350,7 +370,10 @@ def create_or_load_dataset(dataset_file=dataset_file_path,
     reduced_rna_matrix = load_reduced_rna_matrix(
         extracted_files_path / rna_matrix_file_name,
         rna_barcodes,
-        subsampled_barcode_indexes)
+        subsampled_barcode_indexes,
+        len(subsampled_barcode_indexes),
+        len(rna_features)
+    )
 
     # 3. Load ADT matrix
     reduced_adt_matrix = load_reduced_adt_matrix(
@@ -360,11 +383,13 @@ def create_or_load_dataset(dataset_file=dataset_file_path,
 
     # 4. Create the dataset in memory
     dataset = create_mudata_dataset(metadata,
-                                   level,
-                                   reduced_rna_matrix,
-                                   reduced_adt_matrix,
-                                   subsampled_barcodes,
-                                   seed)
+                                    level,
+                                    reduced_rna_matrix,
+                                    reduced_adt_matrix,
+                                    rna_features,
+                                    adt_features,
+                                    subsampled_barcodes,
+                                    seed)
 
     # 5. Save dataset to disk
     save_mudata_dataset_to_disk(dataset,
