@@ -83,17 +83,23 @@ def tab_path(name: str, ext: str = "csv") -> Path:
 # Logging
 # --------------------------------------------------------------------------- #
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
 
+
+def set_log_level(level):
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        force=True
+    )
 def set_log_level_debug():
-    logging.basicConfig(level=logging.DEBUG)
+    set_log_level(level=logging.DEBUG)
 
 def set_log_level_info():
-    logging.basicConfig(level=logging.INFO)
+    set_log_level(level=logging.INFO)
 
 def set_log_level_critical():
-    logging.basicConfig(level=logging.CRITICAL)
+    set_log_level(level=logging.CRITICAL)
+
+
+set_log_level_critical()

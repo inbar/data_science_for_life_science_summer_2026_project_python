@@ -15,7 +15,7 @@ sys.path.insert(0, ".")
 from src import (config, data_io, preprocessing as pp, ground_truth as gt,
                  benchmark as bm, stats as st)
 
-PROC = config.DATA_PROC
+PROC = config.PROCESSED_DATA_DIR_PATH
 LEVEL = config.PRIMARY_LEVEL
 
 
@@ -235,7 +235,7 @@ def stage_plots():
     # ---- cross-method (gene-level) ----
     f, _ = P.pairwise_scatter_matrix(long, config.METHODS); P.save(f, "fig_pairwise_scatter")
     f, _ = P.scatter3d(long, "partial_corr", "mi_ksg", "ig_mlp"); P.save(f, "fig_scatter3d", tight=False)
-    log("all figures written to", config.FIG_DIR)
+    log("all figures written to", config.FIGURES_DIR_PATH)
 
 
 def stage_stability(n_boot: int = 5, boot_cells: int = 3000):

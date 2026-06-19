@@ -6,7 +6,7 @@ import sys
 import time
 from src import data, config
 
-
+config.set_log_level_debug()
 force = sys.argv[1].lower() == "true" if len(sys.argv) > 1 else False
 
 t0 = time.time()
