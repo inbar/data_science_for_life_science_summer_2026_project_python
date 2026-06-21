@@ -34,7 +34,7 @@ import scipy.io
 
 from src import config
 
-# Stop annoying warning message
+# Stop warning message
 mudata.set_options(pull_on_update=False)
 
 # File prefixes
@@ -117,6 +117,13 @@ def select_metadata_indexes_subsample(metadata,
                                       subsample_size,
                                       floor=50,
                                       seed=0):
+    """
+    Select a subsample using square-root proportional stratified subsampling
+    (Square Root Compromise Allocation [Cochran, 1977]).
+
+    Set the sampling fraction of each cell-type proportional to sqrt(n).
+    This shrinks the variance between over-represented and minority cell types.
+    """
     rng = np.random.default_rng(seed)
     level_values = metadata[level]
     value_counts = level_values.value_counts()

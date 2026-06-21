@@ -55,6 +55,7 @@ def normalize_adt(adt):
     return adt
 
 
+
 def select_hvg(rna, n_top=config.N_HVG):
     """HVGs -> shared gene universe for all methods.
 
@@ -84,12 +85,18 @@ def rank_zscore(X: np.ndarray) -> np.ndarray:
     return (R / sd).astype(np.float32)
 
 
-def build_shared_matrix(rna, hvg_genes):
+def build_shared_matrix(rna, genes_of_interest):
     """Shared (cells x HVG) rank-transformed/z-scored matrix + gene names."""
-    sub = rna[:, hvg_genes]
-    X = sub.layers["lognorm"]
-    X = np.asarray(X.todense()) if sp.issparse(X) else np.asarray(X)
-    return rank_zscore(X), list(hvg_genes)
+
+    gene_mask = rna.var["gene_name"].isin(sorted(genes_of_interest))
+
+    subset = rna[:, gene_mask]
+    X = subset.layers["lognorm"]
+    # Layers on the main dataset should always be in a sparse representation
+    # Convert to dense
+
+    X = np.asarray(X.todense())
+    return rank_zscore(X), list(genes_of_interest)
 
 
 # --------------------------------------------------------------------------- #

@@ -16,8 +16,10 @@ import numpy as np
 import pandas as pd
 from matplotlib.lines import Line2D
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401  (registers 3d projection)
+from sympy import false, true
 
 import config
+from config import FIGURES_DIR_PATH
 
 # A colour-blind-safe qualitative palette (Wong 2011).
 PALETTE = ["#0072B2", "#D55E00", "#009E73", "#CC79A7",
@@ -32,17 +34,24 @@ def set_style():
         "savefig.dpi": 600,
         "savefig.bbox": "tight",
         "savefig.pad_inches": 0.02,
-        "pdf.fonttype": 42, "ps.fonttype": 42,   # embed TrueType (editable)
+        "pdf.fonttype": 42,
+        "ps.fonttype": 42,   # embed TrueType (editable)
         "font.family": "sans-serif",
         "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
         "font.size": 8,
-        "axes.titlesize": 8, "axes.labelsize": 8,
-        "xtick.labelsize": 7, "ytick.labelsize": 7,
-        "legend.fontsize": 7, "legend.frameon": False,
-        "axes.spines.top": False, "axes.spines.right": False,
+        "axes.titlesize": 8,
+        "axes.labelsize": 8,
+        "xtick.labelsize": 7,
+        "ytick.labelsize": 7,
+        "legend.fontsize": 7,
+        "legend.frameon": False,
+        "axes.spines.top": False,
+        "axes.spines.right": False,
         "axes.linewidth": 0.8,
-        "xtick.major.width": 0.8, "ytick.major.width": 0.8,
-        "lines.linewidth": 1.2, "lines.markersize": 3,
+        "xtick.major.width": 0.8,
+        "ytick.major.width": 0.8,
+        "lines.linewidth": 1.2,
+        "lines.markersize": 3,
         "figure.constrained_layout.use": True,
     })
 
@@ -59,7 +68,7 @@ def set_fig_level(level):
 def fig_dir(fmt: str = "png"):
     """Directory figures are written to for ``fmt`` at the active level."""
     lvl = _FIG_LEVEL["v"]
-    return (FIG_DIR / lvl / fmt) if lvl else FIG_DIR
+    return (FIGURES_DIR_PATH / lvl / fmt) if lvl else FIGURES_DIR_PATH
 
 
 def save(fig, name: str, tight: bool = True):
@@ -82,25 +91,34 @@ def _mlabel(m: str) -> str:
 # --------------------------------------------------------------------------- #
 # Exploratory / QC
 # --------------------------------------------------------------------------- #
-def qc_violins(qc: pd.DataFrame, cols, figsize=None):
+def qc_violins(qc_metrics: pd.DataFrame, cols, figsize=None):
     """Violin+strip of QC metrics (one panel each). ``qc`` rows = cells."""
     n = len(cols)
     fig, axes = plt.subplots(1, n, figsize=figsize or (1.8 * n, 2.2))
     axes = np.atleast_1d(axes)
-    for ax, c in zip(axes, cols):
-        v = qc[c].values
-        parts = ax.violinplot(v, showextrema=False)
+    for ax, col in zip(axes, cols):
+        value = qc_metrics[col].values
+        parts = ax.violinplot(value, showextrema=false)
         for b in parts["bodies"]:
-            b.set_facecolor(PALETTE[0]); b.set_alpha(0.6); b.set_edgecolor("none")
-        ax.boxplot(v, widths=0.15, showfliers=False,
+            b.set_facecolor(PALETTE[0])
+            b.set_alpha(0.6)
+        ax.boxplot(value, widths=0.15,
+                   showfliers=False,
                    medianprops=dict(color="k", lw=1))
-        ax.set_xticks([]); ax.set_ylabel(c)
+        ax.set_ylabel(col)
     return fig
 
 
-def embedding_scatter(coords, labels, palette=None, s=2, alpha=0.7,
-                      legend=True, figsize=(3.4, 3.0), order=None,
-                      legend_ncol=1, rasterized=True):
+def embedding_scatter(coords,
+                      labels,
+                      palette=None,
+                      s=2,
+                      alpha=0.7,
+                      legend=True,
+                      figsize=(3.4, 3.0),
+                      order=None,
+                      legend_ncol=1,
+                      rasterized=True):
     """Generic 2D embedding (UMAP/PCA) coloured by a categorical label.
 
     No title; axes labelled UMAP1/UMAP2 by the caller via ``ax`` return.
