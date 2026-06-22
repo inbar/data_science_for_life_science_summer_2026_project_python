@@ -15,6 +15,8 @@ from __future__ import annotations
 
 import re
 
+# TODO: Generate this mapping (instead of having it hard coded)
+
 # Antibody (surface-protein) symbol -> list of encoding gene symbol(s).
 # Keys are upper-cased, suffix-stripped names; see _normalise below.
 PROTEIN_TO_GENES: dict[str, list[str]] = {

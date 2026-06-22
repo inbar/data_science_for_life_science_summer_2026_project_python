@@ -194,7 +194,7 @@ def stage_plots():
     clr["ct"] = L1
     mat = clr.groupby("ct")[key_prot].mean()
     matz = (mat - mat.mean()) / mat.std()
-    f, _ = P.protein_validation_heatmap(matz); P.save(f, "fig_adt_validation")
+    f, _ = P.protein_marker_validation_heatmap(matz); P.save(f, "fig_adt_validation")
 
     # ---- per-method diagnostics ----
     hist = SimpleNamespace(**mlpres["history"])
