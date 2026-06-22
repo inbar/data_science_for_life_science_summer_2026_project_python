@@ -1,7 +1,11 @@
 # ️WIP: code cleanup 
-1. Data download and dataset loading (`data.py`)  ✅
-2. Create a non-generated notebook (based on the existing ones) 
-3. Refactor and clean up .py scripts one by one
+1. ~~Data download and dataset loading (`data.py`)~~  ✅
+2. WIP: Create a non-generated notebook (based on the existing ones)
+   * ~~Normalization and preprocessing~~ ✅
+   * Dimentionality reduction
+   * Cell-type label validation
+4. Refactor and clean up .py scripts one by one
+
 
 # Benchmarking dependency measures for marker-gene identification in multi-modal single-cell data
 
