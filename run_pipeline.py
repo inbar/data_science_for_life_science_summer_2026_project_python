@@ -35,7 +35,7 @@ def stage_prep():
     # Shared gene universe = HVGs U all protein-encoding marker genes present in
     # the data, so every protein-derived driver gene is actually scoreable (no
     # leakage: features remain RNA-only; ADT only labels which genes are "true").
-    from src import protein_gene_map as pgm
+    from src import mappings as pgm
     marker_genes = pgm.all_candidate_genes(adt.var_names) & set(rna.var_names)
     universe = sorted(set(hvg) | marker_genes)
     log("HVGs", len(hvg), "| marker genes present", len(marker_genes),
@@ -75,8 +75,8 @@ def stage_gt():
     adt = ad.read_h5ad(PROC / "adt_prep.h5ad")
     with open(PROC / "prep.pkl", "rb") as f:
         prep = pickle.load(f)
-    drivers, details = gt.build_ground_truth(adt, LEVEL, gene_universe=prep["genes"])
-    summ = gt.summarise_drivers(drivers)
+    drivers, details = gt.build_ground_truth(adt, LEVEL, genes_of_interest=prep["genes"])
+    summ = gt.summarise_driver_genes(drivers)
     log("ground truth:\n" + summ.to_string())
     details.to_csv(config.tab_path("ground_truth_proteins"), index=False)
     summ.to_csv(config.tab_path("ground_truth_summary"), index=False)
