@@ -18,70 +18,119 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 
-from src.protein_gene_map import map_protein_to_genes
+from notebooks.notebook import cell_types
+from src import config
+
+from src.adt.preprocessing import LAYER_NAME_LOGARITHMIZED
+from src.mappings import map_protein_to_genes
 
 
-def elevated_proteins(adt, level: str, padj: float = 0.05,
-                      min_lfc: float = 0.0, top_k: int | None = 10):
-    """One-vs-rest elevated proteins per cell type (returns long DataFrame).
+def compute_marker_proteins(dataset,
+                            group_by,
+                            pval_cutoff=0.05,
+                            log2fc_min=0.0,
+                            top_k=10):
+    """Find top_k elevated proteins per cell type.
 
-    Decision / rationale
-    --------------------
-    With ~25k cells every protein is "significant", so the p-value cannot select
-    markers. The directional **Wilcoxon score** is the reliable signal (scanpy's
-    log-fold-change on CLR data is unstable and can be large even for proteins
-    with a *negative* score). We therefore require ``score > 0`` and
-    ``padj < padj``, rank by score, and keep only the ``top_k`` strongest proteins
-    per cell type. This keeps D_c to specific canonical markers and excludes the
-    weakly cross-reactive tail (e.g. platelet antibodies on monocyte aggregates).
+    To find elevated proteins we apply a one-vs-rest differential analysis
+    proteins per cell type using Wilcoxon method on the logarithmized data
+    (not CLR, which typically contains negative values).
+
+    The results are filtered to have:
+    1. `score` < 0
+    2. `pval` < pval_cutoff
+    3. `log2fc` < log2fc_min
+
+    These proteins will be then considered as markers for each cell type.
     """
-    a = ad.AnnData(X=np.asarray(adt.layers["clr"]), obs=adt.obs[[level]].copy(),
-                   var=adt.var.copy())
-    a.obs[level] = a.obs[level].astype("category")
-    sc.tl.rank_genes_groups(a, groupby=level, method="wilcoxon")
-    res = a.uns["rank_genes_groups"]
-    groups = res["names"].dtype.names
-    rows = []
-    for g in groups:
-        df = pd.DataFrame({
-            "celltype": g,
-            "protein": res["names"][g],
-            "score": res["scores"][g],
-            "lfc": res["logfoldchanges"][g],
-            "padj": res["pvals_adj"][g],
-        })
-        df = df[(df["padj"] < padj) & (df["lfc"] > min_lfc) & (df["score"] > 0)]
-        df = df.sort_values("score", ascending=False)
-        if top_k is not None:
-            df = df.head(top_k)
-        rows.append(df)
-    return pd.concat(rows, ignore_index=True)
+
+    # Calculate wilcoxon one vs. rest differential expression for the *proteins*
+    # using logarithmized data (not CLR, which typically contains negative values).
+    #
+    # Pick the top_k proteins.
+    sc.tl.rank_genes_groups(dataset,
+                            use_raw=False,
+                            layer=LAYER_NAME_LOGARITHMIZED,
+                            groupby=group_by,
+                            n_genes=top_k,
+                            method="wilcoxon")
+
+    # Extract the results while applying the cutoffs.
+    df = sc.get.rank_genes_groups_df(dataset,
+                                     group=None,
+                                     gene_symbols="protein_name",
+                                     log2fc_min=log2fc_min,
+                                     pval_cutoff=pval_cutoff)
+
+    # Throw away any entries with scores < 0
+    df = df[df["scores"] > 0]
+
+    df.sort_values(by=["group", "scores"],
+                   ascending=False,
+                   inplace=True)
+
+    return df
 
 
-def build_ground_truth(adt, level: str, gene_universe=None, **kwargs):
-    """Return (drivers, details).
-
-    drivers : {cell_type -> set(driver gene symbols)} (optionally restricted to
-              ``gene_universe``, i.e. the HVGs the methods actually rank).
-    details : long DataFrame of elevated proteins with their mapped genes.
+def build_ground_truth(adt_dataset,
+                       group_by,
+                       genes_of_interest,
+                       pval_cutoff=0.05,
+                       log2fc_min=0.0,
+                       top_k=10):
     """
-    elev = elevated_proteins(adt, level, **kwargs)
-    elev["genes"] = elev["protein"].apply(map_protein_to_genes)
-    universe = set(gene_universe) if gene_universe is not None else None
+    Build the ground truth mapping: Cell -> set of drive genes
 
-    drivers: dict[str, set[str]] = {}
-    for ct, sub in elev.groupby("celltype"):
-        genes = set().union(*sub["genes"]) if len(sub) else set()
-        if universe is not None:
-            genes &= universe
-        drivers[ct] = genes
-    elev["genes_in_universe"] = elev["genes"].apply(
-        lambda gs: [g for g in gs if universe is None or g in universe])
-    return drivers, elev
+    The construction goes as follows:
+    1. Compute the set of top marker (one vs. rest, differentially significnt)
+     proteins for each cell
+    2. For each marker protein, fetch a list of its encoding genes.
+    3. The set of all encoding genes for each cell define the cells "driver gene"
+      set.
+
+    return:
+        cell_type_to_driver_gene_mapping: dict[cell_type -> set(driver genes)]
+            a mapping of each cell to the list of its driver genes
+
+        marker_proteins: Dataframe
+            long DataFrame of elevated proteins with their mapped genes.
+    """
+
+    marker_proteins = compute_marker_proteins(dataset=adt_dataset,
+                                              group_by=group_by,
+                                              pval_cutoff=pval_cutoff,
+                                              log2fc_min=log2fc_min,
+                                              top_k=top_k)
+    marker_proteins["genes"] = marker_proteins["protein_name"].apply(
+        map_protein_to_genes)
+
+    cell_type_to_driver_gene_mapping = {}
+    for cell_type, df in marker_proteins.groupby("group", observed=True):
+        drivers = set(df["genes"].explode())
+        drivers = drivers.intersection(genes_of_interest)
+        cell_type_to_driver_gene_mapping[cell_type] = drivers
+
+    # Filter the gene list for each cell by genes of interest
+    marker_proteins["genes_of_interest"] = (
+        marker_proteins["genes"]
+        .explode()
+        .loc[lambda gene: gene.isin(genes_of_interest)]
+        .groupby(level=0)
+        .agg(lambda gene_series: gene_series.to_list())
+    )
+
+    return cell_type_to_driver_gene_mapping, marker_proteins
 
 
-def summarise_drivers(drivers: dict[str, set[str]]) -> pd.DataFrame:
-    return (pd.DataFrame({"celltype": list(drivers),
-                          "n_drivers": [len(v) for v in drivers.values()],
-                          "drivers": [", ".join(sorted(v)) for v in drivers.values()]})
-            .sort_values("n_drivers", ascending=False).reset_index(drop=True))
+# TODO
+def summarise_driver_genes(cell_type_to_driver_gene_mapping):
+    df = pd.DataFrame(
+        {
+            "cell_type": list(cell_type_to_driver_gene_mapping),
+            "n_drivers": [len(v) for v in
+                          cell_type_to_driver_gene_mapping.values()],
+            "drivers": cell_type_to_driver_gene_mapping.values()
+        }
+    ).sort_values("cell_type", ascending=False).reset_index(drop=True)
+
+    return df

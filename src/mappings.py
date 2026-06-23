@@ -15,6 +15,42 @@ from __future__ import annotations
 
 import re
 
+# Ground Truth Mapping: Cell Type -> Primary Expected Protein
+# From: Hao et al.
+
+CELL_TYPE_TO_MARKER_PROTEIN = {
+    'ASDC': 'CD11c',
+    'B intermediate': 'CD19',
+    'B memory': 'CD27',
+    'B naive': 'CD20',
+    'CD4 CTL': 'CD4-1',
+    'CD4 Naive': 'CD4-1',
+    'CD4 Proliferating': 'CD4-1',
+    'CD4 TCM': 'CD4-1',
+    'CD4 TEM': 'CD4-1',
+    'CD8 Naive': 'CD8',
+    'CD8 Proliferating': 'CD8',
+    'CD8 TCM': 'CD8',
+    'CD8 TEM': 'CD8',
+    'CD14 Mono': 'CD14',
+    'CD16 Mono': 'CD16',
+    'Eryth': 'CD34',
+    'HSPC': 'CD34',
+    'ILC': 'CD56-1',
+    'MAIT': 'CD3-1',
+    'NK': 'CD56-1',
+    'NK Proliferating': 'CD56-1',
+    'NK_CD56bright': 'CD56-1',
+    'Plasmablast': 'CD19',
+    'Platelet': 'CD11c',
+    'Treg': 'CD25',
+    'cDC1': 'HLA-DR',
+    'cDC2': 'CD11c',
+    'dnT': 'CD3-1',
+    'gdT': 'CD3-1',
+    'pDC': 'CD123'
+}
+
 # TODO: Generate this mapping (instead of having it hard coded)
 
 # Antibody (surface-protein) symbol -> list of encoding gene symbol(s).
