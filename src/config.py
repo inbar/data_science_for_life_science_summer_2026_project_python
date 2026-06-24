@@ -5,7 +5,7 @@ pipeline reproducible from a single import.
 """
 from __future__ import annotations
 
-import logging
+import logs
 from pathlib import Path
 
 # --------------------------------------------------------------------------- #
@@ -28,7 +28,7 @@ for path in (RAW_DATA_DIR_PATH,
 # --------------------------------------------------------------------------- #
 # Reproducibility
 # --------------------------------------------------------------------------- #
-SEED = 0
+SEED = 42
 
 # --------------------------------------------------------------------------- #
 # Dataset / preprocessing constants
@@ -77,29 +77,3 @@ def fig_path(name: str, ext: str = "pdf") -> Path:
 
 def tab_path(name: str, ext: str = "csv") -> Path:
     return TABLES_DIR_PATH / f"{name}.{ext}"
-
-
-# --------------------------------------------------------------------------- #
-# Logging
-# --------------------------------------------------------------------------- #
-
-
-
-def set_log_level(level):
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s [%(levelname)s] %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-        force=True
-    )
-def set_log_level_debug():
-    set_log_level(level=logging.DEBUG)
-
-def set_log_level_info():
-    set_log_level(level=logging.INFO)
-
-def set_log_level_critical():
-    set_log_level(level=logging.CRITICAL)
-
-
-set_log_level_critical()

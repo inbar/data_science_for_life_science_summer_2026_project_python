@@ -1,25 +1,7 @@
-"""Protein-derived ground truth D_c.
-
-For each cell type we take the surface proteins that are *elevated* in that type
-versus the rest (one-vs-rest Wilcoxon on CLR-normalised ADT), then map those
-proteins to their encoding gene(s) via the molecule-level curation in
-:mod:`protein_gene_map`. The four RNA methods never see the ADT modality, so this
-keeps the evaluation a genuine cross-modal test.
-
-Only molecular fact enters the protein->gene step; no differential-expression
-prior is used, so D_c is independent of all four methods. Cell types with fewer
-than ``min_drivers`` mapped genes (after intersecting the scored gene universe)
-are excluded downstream.
-"""
 from __future__ import annotations
 
-import anndata as ad
-import numpy as np
 import pandas as pd
 import scanpy as sc
-
-from notebooks.notebook import cell_types
-from src import config
 
 from src.adt.preprocessing import LAYER_NAME_LOGARITHMIZED
 from src.mappings import map_protein_to_genes

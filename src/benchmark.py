@@ -16,6 +16,7 @@ from joblib import Parallel, delayed
 from src import scorers
 from src.metric import auc_rel
 
+# TODO: refactor
 
 def compute_mi_parallel(X_ranked, labels, celltypes, n_jobs=-1,
                         n_neighbors=3, seed=0, max_cells=10000) -> dict[str, np.ndarray]:

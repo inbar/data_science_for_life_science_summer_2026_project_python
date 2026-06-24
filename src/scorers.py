@@ -18,6 +18,7 @@ import numpy as np
 from sklearn.covariance import LedoitWolf
 from sklearn.feature_selection import mutual_info_classif
 
+# TODO: refactor
 
 # --------------------------------------------------------------------------- #
 # Linear, marginal: Spearman correlation

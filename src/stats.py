@@ -23,6 +23,7 @@ import pandas as pd
 from scipy import stats
 from statsmodels.stats.multitest import multipletests
 
+# TODO: refactor
 
 def pivot_auc(df: pd.DataFrame, value="auc_rel",
               index="celltype", columns="method") -> pd.DataFrame:

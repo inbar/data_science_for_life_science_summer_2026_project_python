@@ -28,6 +28,7 @@ PALETTE = ["#0072B2", "#D55E00", "#009E73", "#CC79A7",
 DRIVER_COLOR = "#D55E00"
 BG_COLOR = "#BBBBBB"
 
+# TODO: refactor
 
 def set_style():
     mpl.rcParams.update({
