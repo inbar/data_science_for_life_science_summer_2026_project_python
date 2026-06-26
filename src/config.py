@@ -37,7 +37,7 @@ SEED = 42
 FTP_URL = "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164378/suppl/"
 
 SUBSAMPLE_SIZE = 25_000          # stratified cell subsample size (pitch spec)
-N_HVG = 2_000                 # highly variable genes -> shared feature space
+TOP_K_HVG = 2_000                 # highly variable genes -> shared feature space
 N_PCS = 50                    # PCA components for UMAP / Harmony
 CELLTYPE_LEVELS = {           # metadata column -> human label
     "celltype.l1": "L1 (8 types)",

@@ -13,7 +13,9 @@ to an empty list and are dropped from the ground truth.
 """
 from __future__ import annotations
 
-import re
+from logs import get_logger
+
+log = get_logger()
 
 # Ground Truth Mapping: Cell Type -> Primary Expected Protein
 # From: Hao et al.
@@ -67,16 +69,16 @@ PROTEIN_TO_GENES: dict[str, list[str]] = {
     "CD2": ["CD2"],
     "CD27": ["CD27"],
     "CD28": ["CD28"],
-    "CD127": ["IL7R"],          # IL-7Ra
-    "CD278": ["ICOS"],          # ICOS
-    "CD279": ["PDCD1"],         # PD-1
+    "CD127": ["IL7R"],  # IL-7Ra
+    "CD278": ["ICOS"],  # ICOS
+    "CD279": ["PDCD1"],  # PD-1
     "TIGIT": ["TIGIT"],
     "CD25": ["IL2RA"],
     "CD45RA": ["PTPRC"],
     "CD45RO": ["PTPRC"],
     "CD45": ["PTPRC"],
     "CD62L": ["SELL"],
-    "CD197": ["CCR7"],          # CCR7
+    "CD197": ["CCR7"],  # CCR7
     "CD183": ["CXCR3"],
     "CD194": ["CCR4"],
     "CD196": ["CCR6"],
@@ -86,7 +88,7 @@ PROTEIN_TO_GENES: dict[str, list[str]] = {
     "CD95": ["FAS"],
     "CD57": ["B3GAT1"],
     "KLRG1": ["KLRG1"],
-    "CD134": ["TNFRSF4"],       # OX40
+    "CD134": ["TNFRSF4"],  # OX40
     "CD223": ["LAG3"],
     "CD152": ["CTLA4"],
     # ---- B-cell ----
@@ -104,8 +106,8 @@ PROTEIN_TO_GENES: dict[str, list[str]] = {
     "IGKAPPA": ["IGKC"],
     "IGLAMBDA": ["IGLC1"],
     "CD138": ["SDC1"],
-    "CD267": ["TNFRSF13B"],     # TACI
-    "CD269": ["TNFRSF17"],      # BCMA
+    "CD267": ["TNFRSF13B"],  # TACI
+    "CD269": ["TNFRSF17"],  # BCMA
     # ---- Myeloid / monocyte / DC ----
     "CD14": ["CD14"],
     "CD16": ["FCGR3A", "FCGR3B"],
@@ -120,9 +122,9 @@ PROTEIN_TO_GENES: dict[str, list[str]] = {
     "CD163": ["CD163"],
     "CD172A": ["SIRPA"],
     "CD1C": ["CD1C"],
-    "CD141": ["THBD"],          # BDCA-3, cDC1
-    "CD303": ["CLEC4C"],        # BDCA-2, pDC
-    "CD304": ["NRP1"],          # BDCA-4
+    "CD141": ["THBD"],  # BDCA-3, cDC1
+    "CD303": ["CLEC4C"],  # BDCA-2, pDC
+    "CD304": ["NRP1"],  # BDCA-4
     "CD123": ["IL3RA"],
     "FCERIA": ["FCER1A"],
     "CD32": ["FCGR2A", "FCGR2B"],
@@ -132,15 +134,15 @@ PROTEIN_TO_GENES: dict[str, list[str]] = {
     "CD89": ["FCAR"],
     # ---- NK ----
     "CD56": ["NCAM1"],
-    "CD335": ["NCR1"],          # NKp46
-    "CD336": ["NCR2"],          # NKp44
-    "CD337": ["NCR3"],          # NKp30
-    "CD314": ["KLRK1"],         # NKG2D
+    "CD335": ["NCR1"],  # NKp46
+    "CD336": ["NCR2"],  # NKp44
+    "CD337": ["NCR3"],  # NKp30
+    "CD314": ["KLRK1"],  # NKG2D
     "CD158": ["KIR2DL1"],
     "CD158B": ["KIR2DL2", "KIR2DL3"],
     "CD158E1": ["KIR3DL1"],
-    "CD159A": ["KLRC1"],        # NKG2A
-    "CD159C": ["KLRC2"],        # NKG2C
+    "CD159A": ["KLRC1"],  # NKG2A
+    "CD159C": ["KLRC2"],  # NKG2C
     "CD244": ["CD244"],
     "CD16 ": ["FCGR3A"],
     "NKG2C": ["KLRC2"],
@@ -182,9 +184,9 @@ PROTEIN_TO_GENES: dict[str, list[str]] = {
     "CD155": ["PVR"],
     "CD226": ["CD226"],
     "CD272": ["BTLA"],
-    "CD274": ["CD274"],         # PD-L1
+    "CD274": ["CD274"],  # PD-L1
     "CD275": ["ICOSLG"],
-    "CD357": ["TNFRSF18"],      # GITR
+    "CD357": ["TNFRSF18"],  # GITR
     "TCR": ["TRAC", "TRBC1", "TRBC2"],
     "TCRVA7.2": ["TRAV1-2"],
     "TCRVD2": ["TRDV2"],
@@ -208,7 +210,7 @@ PROTEIN_TO_GENES: dict[str, list[str]] = {
     "FOLR2": ["FOLR2"],
     "CADM1": ["CADM1"],
     "CLEC9A": ["CLEC9A"],
-    "XCR1": ["XCR1"],          # cDC1
+    "XCR1": ["XCR1"],  # cDC1
     "MERTK": ["MERTK"],
     "CD45RB": ["PTPRC"],
     "CD307CFCRL3": ["FCRL3"],
@@ -219,44 +221,22 @@ PROTEIN_TO_GENES: dict[str, list[str]] = {
     "PODOPLANIN": ["PDPN"],
 }
 
-# antigen names that have no informative PBMC RNA gene -> dropped from D_c
-_CONTROL_TOKENS = (
-    "isotype", "control", "mouse igg", "rat igg", "igg1", "igg2",
-    "hashtag", "totalseq", "adt", "unmapped",
-)
+
+def get_marker_genes_for_proteins(protein_names):
+    marker_genes = set()
+
+    for protein_name in protein_names:
+        genes = set()
+
+        if protein_name in PROTEIN_TO_GENES:
+            genes = {gene for gene in PROTEIN_TO_GENES[protein_name]}
+        marker_genes = marker_genes.union(genes)
+
+    return marker_genes
 
 
-def _normalise(name: str) -> str:
-    """Strip TotalSeq dedup suffixes / tags and upper-case for lookup."""
-    s = name.strip()
-    # remove trailing TotalSeq dedup suffix like '-1', '-2' or '.1'
-    s = re.sub(r"[-_.]\d+$", "", s)
-    s = s.replace("_", "").replace(" ", "").replace("/", "")
-    return s.upper()
+def map_protein_to_genes(protein_name):
+    if protein_name in PROTEIN_TO_GENES:
+        return PROTEIN_TO_GENES[protein_name]
 
-
-def is_control(name: str) -> bool:
-    low = name.lower()
-    return any(tok in low for tok in _CONTROL_TOKENS)
-
-
-def all_candidate_genes(protein_names) -> set[str]:
-    """Union of every gene any ADT protein maps to (the marker-gene universe)."""
-    genes: set[str] = set()
-    for p in protein_names:
-        genes.update(map_protein_to_genes(p))
-    return genes
-
-
-def map_protein_to_genes(name: str) -> list[str]:
-    """Return encoding gene symbol(s) for an ADT feature name (or [] if none)."""
-    if is_control(name):
-        return []
-    key = _normalise(name)
-    if key in PROTEIN_TO_GENES:
-        return PROTEIN_TO_GENES[key]
-    # Heuristic fallback: a bare 'CDxx' antigen whose gene symbol is identical
-    # (true for many CD genes, e.g. CD2, CD7, CD14, CD19, CD38...).
-    if re.fullmatch(r"CD\d+[A-Z]?", key):
-        return [key]
-    return []
+    return set()

@@ -6,12 +6,13 @@ import scanpy as sc
 from src.adt.preprocessing import LAYER_NAME_LOGARITHMIZED
 from src.mappings import map_protein_to_genes
 
+print("adas")
 
 def compute_marker_proteins(dataset,
                             group_by,
                             pval_cutoff=0.05,
                             log2fc_min=0.0,
-                            top_k=10):
+                            top_k=10)-> pd.DataFrame:
     """Find top_k elevated proteins per cell type.
 
     To find elevated proteins we apply a one-vs-rest differential analysis
@@ -47,10 +48,6 @@ def compute_marker_proteins(dataset,
     # Throw away any entries with scores < 0
     df = df[df["scores"] > 0]
 
-    df.sort_values(by=["group", "scores"],
-                   ascending=False,
-                   inplace=True)
-
     return df
 
 
@@ -59,13 +56,13 @@ def build_ground_truth(adt_dataset,
                        genes_of_interest,
                        pval_cutoff=0.05,
                        log2fc_min=0.0,
-                       top_k=10):
+                       top_k=10) -> dict[str, set]:
     """
     Build the ground truth mapping: Cell -> set of drive genes
 
     The construction goes as follows:
-    1. Compute the set of top marker (one vs. rest, differentially significnt)
-     proteins for each cell
+    1. Compute the set of top marker proteins (one vs. rest, differentially significnt)
+       for each cell
     2. For each marker protein, fetch a list of its encoding genes.
     3. The set of all encoding genes for each cell define the cells "driver gene"
       set.
@@ -83,6 +80,7 @@ def build_ground_truth(adt_dataset,
                                               pval_cutoff=pval_cutoff,
                                               log2fc_min=log2fc_min,
                                               top_k=top_k)
+
     marker_proteins["genes"] = marker_proteins["protein_name"].apply(
         map_protein_to_genes)
 
@@ -92,26 +90,19 @@ def build_ground_truth(adt_dataset,
         drivers = drivers.intersection(genes_of_interest)
         cell_type_to_driver_gene_mapping[cell_type] = drivers
 
-    # Filter the gene list for each cell by genes of interest
-    marker_proteins["genes_of_interest"] = (
-        marker_proteins["genes"]
-        .explode()
-        .loc[lambda gene: gene.isin(genes_of_interest)]
-        .groupby(level=0)
-        .agg(lambda gene_series: gene_series.to_list())
-    )
-
-    return cell_type_to_driver_gene_mapping, marker_proteins
+    return cell_type_to_driver_gene_mapping
 
 
 # TODO
-def summarise_driver_genes(cell_type_to_driver_gene_mapping):
+def pretty_print_ground_truth(ground_truth_object):
+    """Pretty print a ground truth object created with build_ground_truth()
+    """
     df = pd.DataFrame(
         {
-            "cell_type": list(cell_type_to_driver_gene_mapping),
+            "cell_type": list(ground_truth_object),
             "n_drivers": [len(v) for v in
-                          cell_type_to_driver_gene_mapping.values()],
-            "drivers": cell_type_to_driver_gene_mapping.values()
+                          ground_truth_object.values()],
+            "drivers": ground_truth_object.values()
         }
     ).sort_values("cell_type", ascending=False).reset_index(drop=True)
 

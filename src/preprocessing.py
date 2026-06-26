@@ -58,7 +58,7 @@ def normalize_adt(adt):
 
 
 
-def select_hvg(rna, n_top=config.N_HVG):
+def select_hvg(rna, n_top=config.TOP_K_HVG):
     """HVGs -> shared gene universe for all methods.
 
     Prefer the count-based ``seurat_v3`` flavor; fall back to the log-normalised
