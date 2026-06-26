@@ -1,4 +1,4 @@
-"""End-to-end driver used to validate the whole pipeline on the real data before
+"""End-to-end driver used to validate the whole pipeline on the real persistence before
 freezing the steps into the notebook. Caches expensive intermediates so reruns
 are cheap. Run stages with: python run_pipeline.py <stage>
 where stage in {prep, gt, mlp, bench, stats, all}.
@@ -12,7 +12,7 @@ import pandas as pd
 sys.path.insert(0, ".")
 # NOTE: torch (src.mlp) is imported lazily inside stage_mlp only, so its OpenMP
 # runtime does not clash with numba/MKL during the UMAP step of stage_prep.
-from src import (config, data_io, preprocessing as pp, ground_truth as gt,
+from src import (config, persistence, preprocessing as pp, ground_truth as gt,
                  benchmark as bm, stats as st)
 
 PROC = config.PROCESSED_DATA_DIR_PATH
@@ -25,7 +25,7 @@ def log(*a):
 
 def stage_prep():
     log("loading cache")
-    md = data_io.load_dataset()
+    md = persistence.load_dataset()
     rna, adt = md["rna"], md["adt"]
     log("RNA", rna.shape, "ADT", adt.shape)
     pp.compute_qc(rna)
@@ -33,10 +33,10 @@ def stage_prep():
     pp.normalize_adt(adt)
     hvg = pp.select_hvg(rna)
     # Shared gene universe = HVGs U all protein-encoding marker genes present in
-    # the data, so every protein-derived driver gene is actually scoreable (no
+    # the persistence, so every protein-derived driver gene is actually scoreable (no
     # leakage: features remain RNA-only; ADT only labels which genes are "true").
     from src import mappings as pgm
-    marker_genes = pgm.all_candidate_genes(adt.var_names) & set(rna.var_names)
+    marker_genes = pgm.get_marker_genes_for_proteins(adt.var_names) & set(rna.var_names)
     universe = sorted(set(hvg) | marker_genes)
     log("HVGs", len(hvg), "| marker genes present", len(marker_genes),
         "| shared universe", len(universe))
@@ -57,7 +57,7 @@ def stage_prep():
 
 
 def stage_embed():
-    md = data_io.load_dataset()
+    md = persistence.load_dataset()
     rna = md["rna"]
     pp.normalize_rna(rna)
     with open(PROC / "prep.pkl", "rb") as f:
@@ -76,7 +76,7 @@ def stage_gt():
     with open(PROC / "prep.pkl", "rb") as f:
         prep = pickle.load(f)
     drivers, details = gt.build_ground_truth(adt, LEVEL, genes_of_interest=prep["genes"])
-    summ = gt.summarise_driver_genes(drivers)
+    summ = gt.pretty_print_ground_truth(drivers)
     log("ground truth:\n" + summ.to_string())
     details.to_csv(config.tab_path("ground_truth_proteins"), index=False)
     summ.to_csv(config.tab_path("ground_truth_summary"), index=False)
