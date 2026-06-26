@@ -1,5 +1,5 @@
 """
-Load the Hao 2021 (GSE164378) 3' CITE-seq data into a MuData object and
+Load the Hao 2021 (GSE164378) 3' CITE-seq persistence into a MuData object and
 save it locally.
 
 The raw RNA matrix is 33,538 genes x 161,764 cells (354M non-zeros), too large to
@@ -169,7 +169,7 @@ def load_or_create_full_dataset(raw_archive_path=RAW_ARCHIVE_PATH,
 
     # Check if raw files exist and request download if not
     if not raw_archive_path.exists() or not RAW_METADATA_PATH.exists():
-        log.error("Some of the raw data files are missing [%s, %s]",
+        log.error("Some of the raw persistence files are missing [%s, %s]",
                   RAW_ARCHIVE_FILE_NAME, RAW_METADATA_FILE_NAME)
         log.error("Go to [%s] and download the files.",
                   config.FTP_URL)
@@ -201,7 +201,7 @@ def load_or_create_full_dataset(raw_archive_path=RAW_ARCHIVE_PATH,
     # 2. Read raw metadata
     metadata = load_metadata()
 
-    # 3. Read raw data
+    # 3. Read raw persistence
     rna_matrix = load_mtx_file(EXTRACTED_FILE_PATH / RNA_MATRIX_FILE_NAME)
     adt_matrix = load_mtx_file(EXTRACTED_FILE_PATH / ADT_MATRIX_FILE_NAME)
 
