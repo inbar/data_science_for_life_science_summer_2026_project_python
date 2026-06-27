@@ -12,8 +12,8 @@ from pathlib import Path
 # Paths (resolved relative to the project root, i.e. the parent of ``src/``).
 # --------------------------------------------------------------------------- #
 ROOT = Path(__file__).resolve().parents[1]
-RAW_DATA_DIR_PATH = ROOT / "data" / "raw"
-PROCESSED_DATA_DIR_PATH = ROOT / "data" / "processed"
+RAW_DATA_DIR_PATH = ROOT / "persistence" / "raw"
+PROCESSED_DATA_DIR_PATH = ROOT / "persistence" / "processed"
 RESULTS_DIR_PATH = ROOT / "results"
 FIGURES_DIR_PATH = RESULTS_DIR_PATH / "figures"
 TABLES_DIR_PATH = RESULTS_DIR_PATH / "tables"

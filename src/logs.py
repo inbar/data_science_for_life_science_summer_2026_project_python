@@ -2,8 +2,8 @@ import os
 import logging
 import inspect
 
-log_level = os.environ.get("LOG_LEVEL", "CRITICAL").upper()
-log_level = getattr(logging, log_level, logging.CRITICAL)
+log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+log_level = getattr(logging, log_level, logging.INFO)
 
 logging.basicConfig(
     level=log_level,

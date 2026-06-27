@@ -56,7 +56,6 @@ CELL_TYPE_TO_MARKER_PROTEIN = {
 # TODO: Generate this mapping (instead of having it hard coded)
 
 # Antibody (surface-protein) symbol -> list of encoding gene symbol(s).
-# Keys are upper-cased, suffix-stripped names; see _normalise below.
 PROTEIN_TO_GENES: dict[str, list[str]] = {
     # ---- T-cell co-receptors / TCR-CD3 complex ----
     "CD3": ["CD3D", "CD3E", "CD3G"],
