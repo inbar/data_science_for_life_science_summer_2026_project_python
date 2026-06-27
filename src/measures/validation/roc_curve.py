@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import pandas as pd
-from sklearn.metrics import roc_curve, auc
+import sklearn
 
 
 def prepare_data(results: list[pd.DataFrame],
@@ -31,8 +31,9 @@ def prepare_data(results: list[pd.DataFrame],
         y_true = df_sorted['is_true_marker'].values
         y_scores = df_sorted['score'].values
 
-        false_positive_rate, true_positive_rate, _ = roc_curve(y_true, y_scores)
-        roc_auc = auc(false_positive_rate, true_positive_rate)
+        false_positive_rate, true_positive_rate, _ = sklearn.metrics.roc_curve(
+            y_true, y_scores)
+        roc_auc = sklearn.metrics.roc_auc_score(false_positive_rate, true_positive_rate)
 
         plot_data[name] = (false_positive_rate, true_positive_rate,
                            roc_auc)
