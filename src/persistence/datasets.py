@@ -33,7 +33,7 @@ from mudata import MuData
 
 import logs
 from src import config
-from data import subsampling
+from persistence import subsampling
 
 log = logs.get_logger()
 
