@@ -85,10 +85,13 @@ def prepare_plot_data(results: list[pd.DataFrame],
                                       /
                                       n_targets) * 100
 
+        auc_rel = compute_auc_rel(results_df, ground_truth)
+
         plot_data[name] = (
             percent_samples,
             percent_cumulative,
-            percent_cumulative_perfect
+            percent_cumulative_perfect,
+            auc_rel
         )
 
     return plot_data
@@ -103,8 +106,9 @@ def plot(results: list[pd.DataFrame],
 
     for name, (percent_samples,
                percent_cumulative,
-               percent_cumulative_perfect) in plot_data.items():
-        ax.plot(percent_samples, percent_cumulative, label=f"{name} Method")
+               percent_cumulative_perfect,
+               auc_rel) in plot_data.items():
+        ax.plot(percent_samples, percent_cumulative, label=f"{name} Method (AUC = {auc_rel:.2f})")
         ax.plot(percent_samples, percent_cumulative_perfect, linestyle=':',
                 label=f"Perfect Model ({name})")
         ax.fill_between(percent_samples, percent_cumulative, alpha=0.1)

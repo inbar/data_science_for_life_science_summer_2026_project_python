@@ -33,7 +33,7 @@ def prepare_data(results: list[pd.DataFrame],
 
         false_positive_rate, true_positive_rate, _ = sklearn.metrics.roc_curve(
             y_true, y_scores)
-        roc_auc = sklearn.metrics.roc_auc_score(false_positive_rate, true_positive_rate)
+        roc_auc = sklearn.metrics.roc_auc_score(y_true, y_scores)
 
         plot_data[name] = (false_positive_rate, true_positive_rate,
                            roc_auc)
