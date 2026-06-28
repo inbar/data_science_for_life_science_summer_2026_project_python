@@ -1,9 +1,6 @@
 import numpy as np
-from sklearn.covariance import ledoit_wolf
-
-
-
 import pandas as pd
+
 from sklearn.covariance import ledoit_wolf
 
 
@@ -15,14 +12,17 @@ def calculate_scores(expression_levels_df: pd.DataFrame,
     Computes the Ledoit-Wolf shrunk covariance between features and targets.
 
 
-    Args:
-        expression_levels_df: A pandas DataFrame of shape (n_cells, n_genes)
-            containing the gene expression matrix.
-        labeling_df: A pandas DataFrame of shape (n_cells, n_cell_types)
-            containing the true cell-type labels.
+    Parameters
+    ----------
+    expression_levels_df: A pandas DataFrame of shape (n_cells, n_genes)
+        containing the gene expression matrix.
+    labeling_df: A pandas DataFrame of shape (n_cells, n_cell_types)
+        containing the true cell-type labels.
 
-    Returns:
-        A pandas DataFrame of shape (n_genes, n_cell_types) containing the
+    Returns
+    -------
+    resutls: pd.DataFrame
+        A DataFrame of shape (n_genes, n_cell_types) containing the
         shrunk covariance scores between each gene and cell type.
     """
     num_genes = expression_levels_df.columns.size
@@ -41,11 +41,10 @@ def calculate_scores(expression_levels_df: pd.DataFrame,
     # This extracts the rows corresponding to genes, and columns corresponding to targets.
     association_slice = shrunk_cov_matrix[:num_genes, num_genes:]
 
-    # Package back into an identical DataFrame structure.
-    results_df = pd.DataFrame(
+    results = pd.DataFrame(
         association_slice,
         index=expression_levels_df.columns,
         columns=labeling_df.columns
     )
 
-    return results_df
+    return results
