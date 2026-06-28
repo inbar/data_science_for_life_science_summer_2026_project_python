@@ -47,40 +47,22 @@ def calculate_scores(expression_levels_df: pd.DataFrame,
         A long-form dataframe or a wide matrix mapping Genes to their MI scores.
       """
 
-    # score_dict = {}
-    # for cell_type in labeling_df.columns:
-    #     target_vector = pd.Series(labeling_df[cell_type])
-    #     scores = compute_mi_scores(
-    #         expression_levels_df=expression_levels_df,
-    #         target_vector=target_vector,
-    #         k_neighbors=k_neighbors,
-    #         seed=seed
-    #     )
-    #
-    #     score_dict[cell_type] = scores
-
-    test_cells = expression_levels_df.sample(
-        n=min(200, len(expression_levels_df)), random_state=42).index
-
-    test_expr = expression_levels_df.loc[test_cells].iloc[:, :50]
-    test_labels = labeling_df.loc[test_cells].iloc[:, :3]
-
     # n_jobs=-1 will utilize all available CPU cores automatically
     n_jobs = -1
 
     results = Parallel(n_jobs=n_jobs)(
         delayed(compute_mi_scores)(
             cell_type,
-            test_expr,
-            test_labels[cell_type],
+            expression_levels_df,
+            labeling_df[cell_type],
             k_neighbors,
             seed
         )
-        for cell_type in test_labels.columns
+        for cell_type in labeling_df.columns
     )
 
     score_dict = {cell_type: scores for cell_type, scores in results}
-    genes = test_expr.columns
+    genes = expression_levels_df.columns
     results = pd.DataFrame(score_dict,
                            index=genes)
 
