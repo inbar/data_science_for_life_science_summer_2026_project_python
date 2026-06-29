@@ -32,9 +32,9 @@ import scipy.io
 from mudata import MuData
 
 import logs
-from config import PERSISTANCE_DIR, ROOT, PROCESSED_DATA, RAW_DATA_DIR
-from src import config
+from config import ROOT, PROCESSED_DATA, RAW_DATA_DIR
 from persistence import subsampling
+from src import config
 
 log = logs.get_logger()
 
@@ -66,7 +66,7 @@ RAW_METADATA_PATH = ROOT / RAW_METADATA_FILE_NAME
 ## Dir Paths
 FULL_DATASETS_ROOT_DIR = PROCESSED_DATA / "full_datasets"
 SUBSAMPLE_DATASETS_ROOT_DIR = PROCESSED_DATA / "subsampled_datasets"
-SUBSAMPLE_DATASET_SUBDIR_TEMPLATE = "subsample/{subsample_size}/seed/{seed}"
+SUBSAMPLE_DATASET_SUBDIR_TEMPLATE = "subsample_{subsample_size}/seed_{seed}"
 
 ## File names
 DATASET_FILENAME = "multi_modal_dataset.h5mu"

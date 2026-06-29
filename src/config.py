@@ -12,15 +12,19 @@ from pathlib import Path
 # Paths (resolved relative to the project root, i.e. the parent of ``src/``).
 # --------------------------------------------------------------------------- #
 ROOT = Path(__file__).resolve().parents[1]
-RAW_DATA_DIR_PATH = ROOT / "persistence" / "raw"
-PROCESSED_DATA_DIR_PATH = ROOT / "persistence" / "processed"
+
+# Persistance
+PERSISTANCE_DIR = ROOT / "persistence"
+RAW_DATA_DIR = PERSISTANCE_DIR / "raw_data"
+PROCESSED_DATA = PERSISTANCE_DIR / "processed_data"
+
+
+
 RESULTS_DIR_PATH = ROOT / "results"
 FIGURES_DIR_PATH = RESULTS_DIR_PATH / "figures"
 TABLES_DIR_PATH = RESULTS_DIR_PATH / "tables"
 
-for path in (RAW_DATA_DIR_PATH,
-             PROCESSED_DATA_DIR_PATH,
-             RESULTS_DIR_PATH,
+for path in (RESULTS_DIR_PATH,
              FIGURES_DIR_PATH,
              TABLES_DIR_PATH):
     path.mkdir(parents=True, exist_ok=True)
@@ -36,17 +40,17 @@ SEED = 42
 
 FTP_URL = "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164378/suppl/"
 
-SUBSAMPLE_SIZE = 25_000          # stratified cell subsample size (pitch spec)
-TOP_K_HVG = 2_000                 # highly variable genes -> shared feature space
-N_PCS = 50                    # PCA components for UMAP / Harmony
-CELLTYPE_LEVELS = {           # metadata column -> human label
+SUBSAMPLE_SIZE = 25_000  # stratified cell subsample size (pitch spec)
+TOP_K_HVG = 2_000  # highly variable genes -> shared feature space
+N_PCS = 50  # PCA components for UMAP / Harmony
+CELLTYPE_LEVELS = {  # metadata column -> human label
     "celltype.l1": "L1 (8 types)",
     "celltype.l2": "L2 (~30 types)",
     "celltype.l3": "L3 (57 types)",
 }
 PRIMARY_LEVEL = "celltype.l2"  # primary benchmark granularity
 DONOR_KEY = "donor"
-MIN_DRIVERS = 2                # exclude cell types with |D_c| < MIN_DRIVERS
+MIN_DRIVERS = 2  # exclude cell types with |D_c| < MIN_DRIVERS
 
 # --------------------------------------------------------------------------- #
 # Method labels (consistent ordering / naming everywhere)
@@ -60,16 +64,17 @@ METHOD_LABELS = {
 }
 # 2x2 design coordinates: (linear?, marginal?)
 METHOD_GRID = {
-    "spearman":     ("linear",    "marginal"),
-    "partial_corr": ("linear",    "conditional"),
-    "mi_ksg":       ("nonlinear", "marginal"),
-    "ig_mlp":       ("nonlinear", "conditional"),
+    "spearman": ("linear", "marginal"),
+    "partial_corr": ("linear", "conditional"),
+    "mi_ksg": ("nonlinear", "marginal"),
+    "ig_mlp": ("nonlinear", "conditional"),
 }
 
 # --------------------------------------------------------------------------- #
 # Environment hint (the dedicated conda env created for this project)
 # --------------------------------------------------------------------------- #
 ENV_NAME = "data_science_in_life_sciences_project_2026_group_1"
+
 
 def fig_path(name: str, ext: str = "pdf") -> Path:
     return FIGURES_DIR_PATH / f"{name}.{ext}"
