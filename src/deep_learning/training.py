@@ -24,13 +24,12 @@ def train(training_dataset: AnnData,
           n_epochs=15) -> GeneExpressionModel:
     device = pytorch_device.get_device()
 
-    # Number of genes
-    input_dim = len(training_dataset.var)
+    n_genes = len(training_dataset.var)
+    n_cells = len(labeling_df.columns)
 
-    # Number of cell types
-    output_dim = len(labeling_df.columns)
+    log.info(f"Creating GeneExpressionModel with (input_dim={n_genes} (n_genes)), (output_dim={n_cells} (n_cells)) ")
 
-    model = GeneExpressionModel(input_dim, output_dim)
+    model = GeneExpressionModel(n_genes, n_cells)
 
     criterion, optimizer = get_hyperparameters(model)
     training_dataset, training_dataset_loader = data_conversion.to_dataset_loader(

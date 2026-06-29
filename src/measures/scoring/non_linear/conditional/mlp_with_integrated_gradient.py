@@ -18,7 +18,7 @@ def calculate_scores(trained_model: GeneExpressionModel,
     tensor_dataset, dataset_loader = data_conversion.to_dataset_loader(
         expression_levels_df, labeling_df)
 
-    X_tensor, Y_tensor = tensor_dataset
+    X_tensor, Y_tensor = tensor_dataset.tensors
 
     # Initialize the Integrated Gradients tool the trained model
     ig = IntegratedGradients(trained_model)
