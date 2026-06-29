@@ -31,9 +31,8 @@ import pandas as pd
 import scipy.io
 from mudata import MuData
 
-import logs
-from config import ROOT, PROCESSED_DATA, RAW_DATA_DIR
-from persistence import subsampling
+from src import logs
+from src.persistence import subsampling
 from src import config
 
 log = logs.get_logger()
@@ -58,41 +57,42 @@ ADT_MATRIX_FILE_NAME = "GSM5008738_ADT_3P-matrix.mtx.gz"
 ADT_BARCODES_FILE_NAME = "GSM5008738_ADT_3P-barcodes.tsv.gz"
 ADT_FEATURES_FILE_NAME = "GSM5008738_ADT_3P-features.tsv.gz"
 
-## File paths
-RAW_ARCHIVE_PATH = ROOT / RAW_ARCHIVE_FILE_NAME
-RAW_METADATA_PATH = ROOT / RAW_METADATA_FILE_NAME
+# File paths
+RAW_ARCHIVE_PATH = config.ROOT / RAW_ARCHIVE_FILE_NAME
+RAW_METADATA_PATH = config.ROOT / RAW_METADATA_FILE_NAME
 
 # Processed files
-## Dir Paths
-FULL_DATASETS_ROOT_DIR = PROCESSED_DATA / "full_datasets"
-SUBSAMPLE_DATASETS_ROOT_DIR = PROCESSED_DATA / "subsampled_datasets"
+# Dir Paths
+FULL_DATASETS_ROOT_DIR = config.PROCESSED_DATA / "full_datasets"
+SUBSAMPLE_DATASETS_ROOT_DIR = config.PROCESSED_DATA / "subsampled_datasets"
 SUBSAMPLE_DATASET_SUBDIR_TEMPLATE = "subsample_{subsample_size}/seed_{seed}"
 
-## File names
+# File names
 DATASET_FILENAME = "multi_modal_dataset.h5mu"
-
-LABLES_TO_DROP = ["Doublet"]
 
 
 def extract_files_from_main_archive(file_path,
-                                    output_dir=RAW_DATA_DIR):
-    log.info("Extracting files from main archive [%s]", file_path)
+                                    output_dir=config.RAW_DATA_DIR):
+    log.info(f"Extracting files from main archive [{file_path}]")
     output_dir.mkdir(parents=True, exist_ok=True)
     with tarfile.open(file_path) as tar_file:
         for file in tar_file.getmembers():
             if file.name.startswith((RNA_FILE_PREFIX, ADT_FILE_PREFIX)):
-                log.debug("Extracting file: %s", file)
+                log.debug(f"Extracting file: {file}")
                 tar_file.extract(file, output_dir)
 
 
-def get_dataset_file_path(subsample_size=None, seed=None) -> Path:
+def get_dataset_file_path(subsample_size=None, seed=None,
+                          level=None) -> Path:
+    level_dir = level if level is not None else config.DEFAULT_LEVEL
+
     if subsample_size is None:
-        return FULL_DATASETS_ROOT_DIR / DATASET_FILENAME
+        return FULL_DATASETS_ROOT_DIR / level_dir / DATASET_FILENAME
 
     subsample_dataset_dir = SUBSAMPLE_DATASET_SUBDIR_TEMPLATE.format(
         subsample_size=subsample_size, seed=seed)
 
-    return SUBSAMPLE_DATASETS_ROOT_DIR / subsample_dataset_dir / DATASET_FILENAME
+    return SUBSAMPLE_DATASETS_ROOT_DIR / level_dir / subsample_dataset_dir / DATASET_FILENAME
 
 
 def read_lines(file_path):
@@ -106,11 +106,11 @@ def read_features_file(tsv_file_path):
 
 
 def load_rna_features():
-    return read_features_file(RAW_DATA_DIR / RNA_FEATURES_FILE_NAME)
+    return read_features_file(config.RAW_DATA_DIR / RNA_FEATURES_FILE_NAME)
 
 
 def load_adt_features():
-    return read_features_file(RAW_DATA_DIR / ADT_FEATURES_FILE_NAME)
+    return read_features_file(config.RAW_DATA_DIR / ADT_FEATURES_FILE_NAME)
 
 
 def load_metadata():
@@ -118,14 +118,14 @@ def load_metadata():
 
 
 def load_mtx_file(file_path):
-    log.info("Loading MatrixMarket matrix from file [%s]", file_path)
+    log.info(f"Loading MatrixMarket matrix from file [{file_path}]")
 
     # scipy.io.mmread can handle gzipped files
     matrix = scipy.io.mmread(file_path)
 
     # Transpose (put cells in the rows) and convert to standard row
     # representation
-    log.info("Done loading MatrixMarket matrix from file [%s]", file_path)
+    log.info(f"Done loading MatrixMarket matrix from file [{file_path}]")
 
     return matrix.T.tocsr()
 
@@ -166,36 +166,42 @@ def save_mudata_dataset_to_disk(dataset: MuData,
     dataset.write(output_file_path)
 
 
-def save_full_dataset(dataset: MuData):
-    dataset_file = get_dataset_file_path()
+def save_full_dataset(dataset: MuData, level: str = config.DEFAULT_LEVEL):
+    dataset_file = get_dataset_file_path(level=level)
     save_mudata_dataset_to_disk(dataset, dataset_file)
 
 
-def load_full_dataset():
-    dataset_file = get_dataset_file_path()
+def load_full_dataset(level: str = config.DEFAULT_LEVEL):
+    dataset_file = get_dataset_file_path(level=level)
 
     return read_h5mu_file(dataset_file)
 
 
 def save_subsampled_dataset(dataset: MuData,
-                            subsample_size=None,
-                            seed=None):
+                            subsample_size=-1,
+                            seed=config.DEFAULT_SEED,
+                            level: str = config.DEFAULT_LEVEL):
     dataset_file = get_dataset_file_path(subsample_size=subsample_size,
-                                         seed=seed)
+                                         seed=seed,
+                                         level=level)
     save_mudata_dataset_to_disk(dataset, dataset_file)
 
 
-def load_subsampled_dataset(subsample_size=None,
-                            seed=None):
+def load_subsampled_dataset(subsample_size=-1,
+                            seed=config.DEFAULT_SEED,
+                            level: str = config.DEFAULT_LEVEL):
     dataset_file = get_dataset_file_path(subsample_size=subsample_size,
-                                         seed=seed)
+                                         seed=seed,
+                                         level=level)
     return read_h5mu_file(dataset_file)
 
 
-def dataset_exist(subsample_size=None,
-                  seed=None):
+def dataset_exist(subsample_size=config.DEFAULT_SUBSAMPLE_SIZE,
+                  seed: int = config.DEFAULT_SEED,
+                  level: str = config.DEFAULT_LEVEL):
     dataset_file = get_dataset_file_path(subsample_size=subsample_size,
-                                         seed=seed)
+                                         seed=seed,
+                                         level=level)
 
     exists = dataset_file.exists()
 
@@ -215,8 +221,8 @@ def load_or_create_full_dataset(raw_archive_path=RAW_ARCHIVE_PATH,
 
     # Check if raw files exist and request download if not
     if not raw_archive_path.exists() or not RAW_METADATA_PATH.exists():
-        log.error("Some of the raw persistence files are missing [%s, %s]",
-                  RAW_ARCHIVE_FILE_NAME, RAW_METADATA_FILE_NAME)
+        log.error(
+            f"Some of the raw persistence files are missing [{RAW_ARCHIVE_FILE_NAME}, {RAW_METADATA_FILE_NAME}]")
         log.error(f"Go to {config.FTP_URL} and download the files.")
         log.error("Place the files as is in the root of the repository.")
         raise FileNotFoundError(raw_archive_path)
@@ -231,7 +237,7 @@ def load_or_create_full_dataset(raw_archive_path=RAW_ARCHIVE_PATH,
     # Extract files from the main archive
     extract_files_from_main_archive(
         file_path=raw_archive_path,
-        output_dir=RAW_DATA_DIR
+        output_dir=config.RAW_DATA_DIR
     )
 
     # 1. Read raw features
@@ -242,8 +248,8 @@ def load_or_create_full_dataset(raw_archive_path=RAW_ARCHIVE_PATH,
     metadata = load_metadata()
 
     # 3. Read raw persistence
-    rna_matrix = load_mtx_file(RAW_DATA_DIR / RNA_MATRIX_FILE_NAME)
-    adt_matrix = load_mtx_file(RAW_DATA_DIR / ADT_MATRIX_FILE_NAME)
+    rna_matrix = load_mtx_file(config.RAW_DATA_DIR / RNA_MATRIX_FILE_NAME)
+    adt_matrix = load_mtx_file(config.RAW_DATA_DIR / ADT_MATRIX_FILE_NAME)
 
     # 4. Create the dataset in memory
     dataset = create_mudata_dataset(rna_matrix,
@@ -252,25 +258,15 @@ def load_or_create_full_dataset(raw_archive_path=RAW_ARCHIVE_PATH,
                                     adt_features,
                                     metadata)
 
-    # 5. Save dataset to disk
-    save_full_dataset(dataset)
-
     return dataset
 
 
-def perliminary_cleanup(dataset, level):
-    rna_dataset = dataset["rna"]
-    invalid_barcodes = rna_dataset.obs[level].isin(LABLES_TO_DROP)
-    return dataset[~invalid_barcodes]
-
-
-def load_or_create_subsample(subsample_size=config.SUBSAMPLE_SIZE,
-                             level=config.PRIMARY_LEVEL,
-                             seed=config.SEED,
+def load_or_create_subsample(subsample_size=config.DEFAULT_SUBSAMPLE_SIZE,
+                             level=config.DEFAULT_LEVEL,
+                             seed=config.DEFAULT_SEED,
                              force_recreate=False) -> MuData:
-
-    log.info("Load or create dataset: subsample size=%d, level=%s",
-             subsample_size, level)
+    log.info(
+        f"Load or create dataset: subsample size={subsample_size}, level={level}")
 
     if dataset_exist(subsample_size, seed):
         if force_recreate:
@@ -291,7 +287,5 @@ def load_or_create_subsample(subsample_size=config.SUBSAMPLE_SIZE,
                                     level=level,
                                     subsample_size=subsample_size,
                                     seed=seed)
-
-    save_subsampled_dataset(dataset, subsample_size=subsample_size, seed=seed)
 
     return dataset

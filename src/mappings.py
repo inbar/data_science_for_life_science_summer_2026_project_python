@@ -13,7 +13,7 @@ to an empty list and are dropped from the ground truth.
 """
 from __future__ import annotations
 
-from logs import get_logger
+from src.logs import get_logger
 
 log = get_logger()
 

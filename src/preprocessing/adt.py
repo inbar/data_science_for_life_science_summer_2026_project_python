@@ -15,6 +15,8 @@ def normalize_in_place(dataset):
     # Logarithmize and store in layer
     dataset.layers[LAYER_NAME_LOGARITHMIZED] = sc.pp.log1p(dataset, copy=True).X
 
+
+    # TODO! DATA LEAKAGE!
     # Compute CLR
     dataset.X = dataset.X.tocsc().astype('float32')
     mu.prot.pp.clr(dataset)

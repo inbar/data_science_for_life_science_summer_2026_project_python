@@ -2,7 +2,10 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 import scipy as sp
-import config
+from anndata import AnnData
+
+from src import config
+from src import config
 
 from src import logs
 
@@ -17,32 +20,17 @@ OBSM_NAME_PCA_HARMONY = "X_pca_harmony"
 OBSM_NAME_UMAP = "X_umap"
 OBSM_NAME_UMAP_HARMONY = "X_umap_harmony"
 
+LABLES_TO_DROP = ["Doublet"]
+
 
 def calculate_qc_metrics_in_place(dataset):
     # Mitochondrial genes
-    dataset.var["mito"] = dataset.var["gene_name"].str.startswith("MT-")
+    dataset.var["mt"] = dataset.var["gene_name"].str.startswith("MT-")
     sc.pp.calculate_qc_metrics(dataset,
-                               qc_vars=["mito"],
+                               qc_vars=["mt"],
                                inplace=True,
                                percent_top=None,
                                log1p=False)
-
-
-def normalize_in_place(dataset, target_sum=1e4):
-    # Store unnormalized counts in a layer
-    dataset.layers[LAYER_NAME_RAW_COUNTS] = dataset.X.copy()
-
-    # Normalize the counts for each row to `target_sum`
-    sc.pp.normalize_total(dataset, target_sum=target_sum)
-
-    # Store normalized counts in a layer
-    dataset.layers[LAYER_NAME_NORMALIZED_COUNTS] = dataset.X.copy()
-
-    # Logarithmize
-    sc.pp.log1p(dataset)
-
-    # Store normalized counts in a layer
-    dataset.layers[LAYER_NAME_LOGARITHMIZED] = dataset.X.copy()
 
 
 def scale_in_place(dataset):
@@ -52,8 +40,9 @@ def scale_in_place(dataset):
     sc.pp.scale(dataset, max_value=10)
 
 
-def apply_basic_filtering(dataset,
-                          min_genes=200,
+def apply_basic_filtering(dataset: AnnData,
+                          level: str,
+                          min_gene_count=200,
                           max_pct_mito=20.0):
     """
     Data is already filtered to begin with.
@@ -62,14 +51,20 @@ def apply_basic_filtering(dataset,
     Keep only genes with:
     1. n_genes_by_counts > min_genes
     2. pct_counts_mito < max_pct_mito
+    3. Not in [labels to drop]
 
     """
-    keep = (dataset.obs["n_genes_by_counts"] >= min_genes) & (
-        dataset.obs["pct_counts_mito"] <= max_pct_mito)
-    return dataset[keep].copy()
+
+    sc.pp.filter_cells(dataset, min_counts=min_gene_count)
+
+    dataset = dataset[dataset.obs['pct_counts_mt'] < max_pct_mito, :]
+    dataset = dataset[~dataset.obs[level].isin(LABLES_TO_DROP), :]
+
+    return dataset.copy()
 
 
-def annotate_highly_variable_genes(dataset, n_top=config.TOP_K_HVG):
+def annotate_highly_variable_genes(dataset: AnnData,
+                                   n_top: int = config.N_TOP_HVGs):
     """
     This method extends the gene (var) annotations in place.
 
@@ -81,15 +76,14 @@ def annotate_highly_variable_genes(dataset, n_top=config.TOP_K_HVG):
                                 n_top_genes=n_top,
                                 flavor="seurat_v3",
                                 layer=LAYER_NAME_RAW_COUNTS,
-                                inplace=True,
                                 subset=False)
 
 
-def get_highly_variable_genes(dataset):
-    return dataset.var["gene_name"][dataset.var["highly_variable"]].tolist()
+def get_highly_variable_genes(dataset: AnnData):
+    return dataset.var["gene_name"][dataset.var["highly_variable"]]
+
 
 def rank_transform_in_place(dataset):
-
     if sp.sparse.isspmatrix(dataset.X):
         X = dataset.X.todense()
     else:
@@ -109,8 +103,9 @@ def build_matrix_of_interest(dataset):
     X = np.asarray(X.todense())
     return X
 
+
 def build_target_df(dataset,
-                    level)-> pd.DataFrame:
+                    level) -> pd.DataFrame:
     """Creates a binary one-hot encoded matrix mapping cells to their specific cell types.
 
         Loops through all categories at the specified annotation level and creates
@@ -140,9 +135,10 @@ def build_target_df(dataset,
         columns=cell_types
     )
 
+
 def perform_pca_in_place(dataset,
                          n_pcs=config.N_PCS,
-                         seed=config.SEED):
+                         seed=config.DEFAULT_SEED):
     """Perform PCA
 
     Stores: X_pca
@@ -162,7 +158,7 @@ def perform_pca_harmony_in_place(dataset,
 
 def perform_umap_in_place(dataset,
                           n_pcs=config.N_PCS,
-                          seed=config.SEED):
+                          seed=config.DEFAULT_SEED):
     """Perform UMAP
 
     Stores: X_umap
@@ -172,7 +168,7 @@ def perform_umap_in_place(dataset,
 
 
 def perform_umap_harmony_in_place(dataset,
-                                  seed=config.SEED):
+                                  seed=config.DEFAULT_SEED):
     """Perform UMAP with harmony batch correction
 
     Stores: X_umap_harmony

@@ -24,7 +24,7 @@ def compute_mi_scores(cell_type: str,
 def calculate_scores(expression_levels_df: pd.DataFrame,
                      labeling_df: pd.DataFrame,
                      k_neighbors=3,
-                     seed=config.SEED):
+                     seed=config.DEFAULT_SEED):
     """Computes the marginal KSG Mutual Information for every gene against
     every cell type.
 

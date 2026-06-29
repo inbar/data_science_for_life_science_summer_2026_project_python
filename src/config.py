@@ -5,7 +5,6 @@ pipeline reproducible from a single import.
 """
 from __future__ import annotations
 
-import logs
 from pathlib import Path
 
 # --------------------------------------------------------------------------- #
@@ -17,8 +16,6 @@ ROOT = Path(__file__).resolve().parents[1]
 PERSISTANCE_DIR = ROOT / "persistence"
 RAW_DATA_DIR = PERSISTANCE_DIR / "raw_data"
 PROCESSED_DATA = PERSISTANCE_DIR / "processed_data"
-
-
 
 RESULTS_DIR_PATH = ROOT / "results"
 FIGURES_DIR_PATH = RESULTS_DIR_PATH / "figures"
@@ -32,7 +29,7 @@ for path in (RESULTS_DIR_PATH,
 # --------------------------------------------------------------------------- #
 # Reproducibility
 # --------------------------------------------------------------------------- #
-SEED = 42
+DEFAULT_SEED = 42
 
 # --------------------------------------------------------------------------- #
 # Dataset / preprocessing constants
@@ -40,17 +37,18 @@ SEED = 42
 
 FTP_URL = "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164378/suppl/"
 
-SUBSAMPLE_SIZE = 25_000  # stratified cell subsample size (pitch spec)
-TOP_K_HVG = 2_000  # highly variable genes -> shared feature space
+DEFAULT_SUBSAMPLE_SIZE = -1  # stratified cell subsample size (pitch spec)
+N_TOP_HVGs = 2_000  # highly variable genes -> shared feature space
 N_PCS = 50  # PCA components for UMAP / Harmony
 CELLTYPE_LEVELS = {  # metadata column -> human label
     "celltype.l1": "L1 (8 types)",
     "celltype.l2": "L2 (~30 types)",
     "celltype.l3": "L3 (57 types)",
 }
-PRIMARY_LEVEL = "celltype.l2"  # primary benchmark granularity
+DEFAULT_LEVEL = "celltype.l2"  # primary benchmark granularity
 DONOR_KEY = "donor"
 MIN_DRIVERS = 2  # exclude cell types with |D_c| < MIN_DRIVERS
+DEFAULE_TEST_SPLIT_SIZE = 15
 
 # --------------------------------------------------------------------------- #
 # Method labels (consistent ordering / naming everywhere)
