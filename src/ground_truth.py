@@ -3,10 +3,8 @@ from __future__ import annotations
 import pandas as pd
 import scanpy as sc
 
-from src.adt.preprocessing import LAYER_NAME_LOGARITHMIZED
+from preprocessing.adt import LAYER_NAME_LOGARITHMIZED
 from src.mappings import map_protein_to_genes
-
-print("adas")
 
 def compute_marker_proteins(dataset,
                             group_by,
