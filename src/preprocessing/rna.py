@@ -109,8 +109,8 @@ def build_matrix_of_interest(dataset):
     X = np.asarray(X.todense())
     return X
 
-def build_target_matrix(dataset,
-                        level)-> pd.DataFrame:
+def build_target_df(dataset,
+                    level)-> pd.DataFrame:
     """Creates a binary one-hot encoded matrix mapping cells to their specific cell types.
 
         Loops through all categories at the specified annotation level and creates
