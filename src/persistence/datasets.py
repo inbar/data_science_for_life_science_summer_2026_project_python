@@ -46,7 +46,7 @@ RNA_FILE_PREFIX = "GSM5008737_RNA"
 ADT_FILE_PREFIX = "GSM5008738_ADT"
 
 # Raw files
-## File names
+# File names
 RAW_ARCHIVE_FILE_NAME = "GSE164378_RAW.tar"  # ~1.4 GB
 RAW_METADATA_FILE_NAME = "GSE164378_sc.meta.data_3P.csv.gz"
 
@@ -83,17 +83,16 @@ def extract_files_from_main_archive(file_path,
                 tar_file.extract(file, output_dir)
 
 
-def get_dataset_file_path(subsample_size=None, seed=None,
-                          level=None) -> Path:
-    level_dir = level if level is not None else config.DEFAULT_LEVEL
-
-    if subsample_size is None:
-        return FULL_DATASETS_ROOT_DIR / level_dir / DATASET_FILENAME
+def get_dataset_file_path(subsample_size=config.DEFAULT_SUBSAMPLE_SIZE,
+                          seed=config.DEFAULT_SEED,
+                          level=config.DEFAULT_LEVEL) -> Path:
+    if subsample_size is config.DEFAULT_SUBSAMPLE_SIZE:
+        return FULL_DATASETS_ROOT_DIR / level / DATASET_FILENAME
 
     subsample_dataset_dir = SUBSAMPLE_DATASET_SUBDIR_TEMPLATE.format(
         subsample_size=subsample_size, seed=seed)
 
-    return SUBSAMPLE_DATASETS_ROOT_DIR / level_dir / subsample_dataset_dir / DATASET_FILENAME
+    return SUBSAMPLE_DATASETS_ROOT_DIR / level / subsample_dataset_dir / DATASET_FILENAME
 
 
 def read_lines(file_path):
@@ -203,7 +202,6 @@ def dataset_exist(subsample_size=config.DEFAULT_SUBSAMPLE_SIZE,
     dataset_file = get_dataset_file_path(subsample_size=subsample_size,
                                          seed=seed,
                                          level=level)
-
     exists = dataset_file.exists()
 
     if exists:

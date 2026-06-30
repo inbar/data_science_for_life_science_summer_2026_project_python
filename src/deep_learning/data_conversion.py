@@ -15,6 +15,7 @@ def to_dataset_loader(dataset: pd.DataFrame,
     dataset = TensorDataset(X_tensor, Y_tensor)
     dataset_loader = DataLoader(dataset,
                                 batch_size=batch_size,
-                                shuffle=True)
+                                shuffle=True,
+                                drop_last=True)
 
     return dataset, dataset_loader

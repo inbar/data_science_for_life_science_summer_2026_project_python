@@ -24,6 +24,7 @@ from src.measures.scoring.non_linear.conditional import \
 from src.measures.scoring.non_linear.marginal import mutual_information_ksg
 from src.persistence import splits as split_persistence
 from src.preprocessing import rna as rna_preprocessing
+from src.persistence import results as results_persistence
 
 warnings.simplefilter("ignore", category=PerformanceWarning)
 warnings.simplefilter("ignore", category=ImplicitModificationWarning)
@@ -73,7 +74,7 @@ def run_mutual_information(rna_data: AnnData,
 def run_mlp_ig(trained_model: GeneExpressionModel,
                rna_data: AnnData,
                labeling_df: pd.DataFrame,
-               fitted_scaler: StandardScaler):
+               fitted_scaler: StandardScaler) -> pd.DataFrame:
     scaled_expression_levels_df = pd.DataFrame(
         data=fitted_scaler.transform(rna_data.to_df()),
         index=rna_data.obs_names,
@@ -157,13 +158,14 @@ def main(args):
                                              seed=seed,
                                              k_neighbors=k_neighbors)
         case m if m == config.METHOD_MLP:
-
             trained_model = get_trained_model(training_data=training_data_rna,
                                               test_split_size=test_split_size,
                                               seed=seed,
-                                              subsample_size=subsample_size)
+                                              subsample_size=subsample_size,
+                                              level=level)
 
-            results = run_mlp_ig(test_data_rna,
+            results = run_mlp_ig(trained_model,
+                                 test_data_rna,
                                  target_df,
                                  scaler)
         case _:
@@ -171,8 +173,14 @@ def main(args):
 
     log.info("Done.")
 
-    print(results)
-    # TODO: persist results
+    results_persistence.save_results(
+        results=results,
+        method_name=method,
+        subsample_size=subsample_size,
+        level=level,
+        test_split_size=test_split_size,
+        seed=seed
+    )
 
 
 if __name__ == "__main__":

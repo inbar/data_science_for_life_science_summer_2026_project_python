@@ -12,6 +12,7 @@ from pandas.errors import PerformanceWarning
 
 from src.deep_learning import training
 from src import config
+from src import logs
 from src.persistence import splits as split_persistence
 from src.persistence import models as model_persistence
 from src.preprocessing import rna as rna_preprocessing
@@ -21,6 +22,7 @@ warnings.simplefilter("ignore", category=ImplicitModificationWarning)
 
 import logging
 
+logs.setup_logging(__file__)
 log = logging.getLogger(__file__)
 
 def main(args):
@@ -62,8 +64,6 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--method", choices=config.METHODS, type=str,
-                        default=None)
     parser.add_argument("--subsample_size", type=int,
                         default=config.DEFAULT_SUBSAMPLE_SIZE)
     parser.add_argument("--level", type=str, default=config.DEFAULT_LEVEL)

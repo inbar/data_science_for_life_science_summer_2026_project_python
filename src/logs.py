@@ -1,5 +1,6 @@
 import logging
 import os
+import socket
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -13,7 +14,8 @@ log_level = getattr(logging, log_level, logging.INFO)
 def setup_logging(calling_file: str):
     script_name = Path(calling_file).stem
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    log_filename = f"{script_name}_{timestamp}.log"
+    hostname = socket.gethostname()
+    log_filename = f"{script_name}_{timestamp}_{hostname}.log"
 
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)

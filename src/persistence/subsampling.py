@@ -21,8 +21,6 @@ def subsample_barcodes(rna_dataset,
     Set the sampling fraction of each cell-type proportional to sqrt(n).
     This shrinks the variance between over-represented and minority cell types.
     """
-    log.debug("Subsampling barcodes: level=%s, subsample_size=%d, seed=%d",
-              level, subsample_size, seed)
     rng = np.random.default_rng(seed)
     level_values = rna_dataset.obs[level]
     level_value_counts = level_values.value_counts()

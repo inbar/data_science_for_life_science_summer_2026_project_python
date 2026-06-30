@@ -34,7 +34,7 @@ def train(training_data: AnnData,
     log.info("Creating GeneExpressionModel")
     log.info("-----------------------------")
     log.info(f"   input_dim={n_genes} (n_genes)")
-    log.info(f"   output_dim={n_cell_types} (n_cell_types")
+    log.info(f"   output_dim={n_cell_types} (n_cell_types)")
     log.info("")
     model = GeneExpressionModel(n_genes, n_cell_types)
 
@@ -53,27 +53,26 @@ def train(training_data: AnnData,
     log.info("-" * 40)
 
     for epoch in range(n_epochs):
-        model.train()  # Explicitly set model to training mode (enables Dropout/BatchNorm)
+        model.train()
         running_loss = 0.0
 
         for training_batch_x, training_batch_y in training_dataset_loader:
-            # Move the batched chunk data to the same hardware device as the model
-            training_batch_x, training_batch_y = training_batch_x.to(
-                device), training_batch_y.to(device)
+            training_batch_x = training_batch_x.to(device)
+            training_batch_y = training_batch_y.to(device)
 
             # 1. Clear previous gradients
             optimizer.zero_grad()
 
-            # 2. Forward Pass: Make predictions
+            # 2. Make predictions
             predictions = model(training_batch_x)
 
             # 3. Calculate error
             loss = criterion(predictions, training_batch_y)
 
-            # 4. Backward Pass: Calculate adjustments
+            # 4. Calculate adjustments
             loss.backward()
 
-            # 5. Optimization Step: Update model weights
+            # 5. Update model weights
             optimizer.step()
 
             running_loss += loss.item() * training_batch_x.size(0)

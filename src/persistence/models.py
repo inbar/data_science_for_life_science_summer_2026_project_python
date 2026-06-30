@@ -3,14 +3,12 @@ from pathlib import Path
 import torch
 from torch import nn
 
+from src.persistence import path_tools
 from src import config
 
-TRAINED_MODELS_DIR_PATH = config.PERSISTANCE_DIR / "trained_models"
-SUBSAMPLED_DATA_SUBDIR_TEMPLATE = "from_subsampled_dataset/{subsample_size}"
-FULL_DATASET_SUBDIR_NAME = "from_full_dataset"
-TRAINED_MODEL_SUBDIR_TEMPLATE = "split_{split_size}/seed_{seed}"
-
 FILE_NAME = "trained_model_weights.pt"
+
+ROOT_DIR = config.PERSISTENCE_DIR / "trained_models"
 
 
 def get_trained_model_file_path(
@@ -18,22 +16,15 @@ def get_trained_model_file_path(
     seed: int = config.DEFAULT_SEED,
     subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
     level: str = config.DEFAULT_LEVEL) -> Path:
-    if subsample_size is None:
-        subsample_dir = FULL_DATASET_SUBDIR_NAME
-    else:
-        subsample_dir = SUBSAMPLED_DATA_SUBDIR_TEMPLATE.format(
-            subsample_size=subsample_size)
+    subfolders = path_tools.get_subfolder_path(subsample_size=subsample_size,
+                                               level=level,
+                                               test_split_size=test_split_size,
+                                               seed=seed)
 
-    trained_model_subdir = TRAINED_MODEL_SUBDIR_TEMPLATE.format(
-        subsample_size=subsample_size,
-        split_size=test_split_size,
-        seed=seed
-    )
+    file_path = ROOT_DIR / subfolders / FILE_NAME
+    file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    full_file_path = TRAINED_MODELS_DIR_PATH / level / subsample_dir / trained_model_subdir / FILE_NAME
-    full_file_path.parent.mkdir(parents=True, exist_ok=True)
-
-    return full_file_path
+    return file_path
 
 
 def save_trained_model_weights(model: nn.Module,
