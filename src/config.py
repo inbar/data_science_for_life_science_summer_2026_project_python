@@ -49,11 +49,18 @@ DEFAULT_LEVEL = "celltype.l2"  # primary benchmark granularity
 DONOR_KEY = "donor"
 MIN_DRIVERS = 2  # exclude cell types with |D_c| < MIN_DRIVERS
 DEFAULE_TEST_SPLIT_SIZE = 15
+DEFAULT_K_NEIGHBORS = 3
 
 # --------------------------------------------------------------------------- #
 # Method labels (consistent ordering / naming everywhere)
 # --------------------------------------------------------------------------- #
-METHODS = ["spearman", "partial_corr", "mi_ksg", "ig_mlp"]
+
+METHOD_SPEARMAN = "spearman"
+METHOD_PC = "partial_corr"
+METHOD_MI = "mi_ksg"
+METHOD_MLP = "ig_mlp"
+
+METHODS = [METHOD_SPEARMAN, METHOD_PC, METHOD_MI, METHOD_MLP]
 METHOD_LABELS = {
     "spearman": "Spearman",
     "partial_corr": "Partial correlation",

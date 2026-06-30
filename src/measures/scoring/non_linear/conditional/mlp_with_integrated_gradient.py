@@ -2,9 +2,9 @@ import pandas as pd
 import torch
 from captum.attr import IntegratedGradients
 
-from deep_learning import data_conversion
-from deep_learning.gene_expression_mlp_model import GeneExpressionModel
-from deep_learning.pytorch_device import get_device
+from src.deep_learning import data_conversion
+from src.deep_learning.gene_expression_mlp_model import GeneExpressionModel
+from src.deep_learning.pytorch_device import get_device
 
 from src.logs import get_logger
 
@@ -13,7 +13,7 @@ log = get_logger()
 def calculate_scores(trained_model: GeneExpressionModel,
                      expression_levels_df: pd.DataFrame,
                      labeling_df: pd.DataFrame) -> pd.DataFrame:
-    log.info("Computing Non-Linear/Conditional scoring: Deep Learning (MLP with Integrated Gradient)")
+    log.info("Computing Non-Linear/Conditional scoring: Integrated Gradient over a trained MLP")
 
     device = get_device()
 

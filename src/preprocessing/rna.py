@@ -5,8 +5,6 @@ import scipy as sp
 from anndata import AnnData
 
 from src import config
-from src import config
-
 from src import logs
 
 log = logs.get_logger()
@@ -93,6 +91,7 @@ def rank_transform_in_place(dataset):
     dataset.layers[LAYER_NAME_RANK_TRANSFORMED] = X_ranked
 
 
+# TODO: remove?
 def build_matrix_of_interest(dataset):
     """Shared (cells x HVG) rank-transformed/z-scored matrix"""
 
@@ -119,7 +118,7 @@ def build_target_df(dataset,
             A DataFrame where rows are cell barcodes, columns are cell types,
             and values are 1 if the cell belongs to that type (0 otherwise).
         """
-    cell_types = dataset.obs[level].cat.categories.tolist()
+    cell_types = np.unique(dataset.obs[level].values)
 
     target_vectors = []
 

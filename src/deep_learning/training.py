@@ -27,10 +27,12 @@ def train(training_dataset: AnnData,
     n_genes = len(training_dataset.var)
     n_cells = len(labeling_df.columns)
 
-    log.info(f"Creating GeneExpressionModel with (input_dim={n_genes} (n_genes)), (output_dim={n_cells} (n_cells)) ")
+    log.info(
+        f"Creating GeneExpressionModel with (input_dim={n_genes} (n_genes)), (output_dim={n_cells} (n_cells)) ")
 
     model = GeneExpressionModel(n_genes, n_cells)
 
+    # TODO: validate: the training data must be scaled!
     criterion, optimizer = get_hyperparameters(model)
     training_dataset, training_dataset_loader = data_conversion.to_dataset_loader(
         training_dataset.to_df(),

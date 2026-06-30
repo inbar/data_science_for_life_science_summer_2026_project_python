@@ -1,7 +1,7 @@
 from torch import nn
 
-from deep_learning.pytorch_device import get_device
-from persistence.models import load_trained_model
+from src.deep_learning.pytorch_device import get_device
+from src.persistence.models import load_trained_model_weights
 
 
 class GeneExpressionModel(nn.Module):
@@ -33,10 +33,10 @@ class GeneExpressionModel(nn.Module):
 
 def load_trained_model(n_genes: int,
                        n_cells: int,
-                       test_split_size_pct: int,
+                       test_split_size: int,
                        seed: int,
-                       subsample_size: int = None) -> GeneExpressionModel:
-    state_dict = load_trained_model(test_split_size_pct, seed, subsample_size)
+                       subsample_size: int) -> GeneExpressionModel:
+    state_dict = load_trained_model_weights(test_split_size, seed, subsample_size)
 
     model = GeneExpressionModel(n_genes, n_cells)
 

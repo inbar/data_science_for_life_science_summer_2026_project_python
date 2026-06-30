@@ -12,6 +12,8 @@ from anndata import ImplicitModificationWarning, AnnData
 from pandas.errors import PerformanceWarning
 from sklearn.preprocessing import StandardScaler
 
+from src.deep_learning.gene_expression_mlp_model import GeneExpressionModel
+from src.deep_learning import gene_expression_mlp_model
 from src import config
 from src.logs import get_logger
 from src.persistence import splits as split_persistence
@@ -20,6 +22,8 @@ from src.measures.scoring.linear.marginal import spearman_correlation
 from src.measures.scoring.linear.conditional import \
     ledoit_wolf_partial_correlation
 from src.measures.scoring.non_linear.marginal import mutual_information_ksg
+from src.measures.scoring.non_linear.conditional import \
+    mlp_with_integrated_gradient
 
 warnings.simplefilter("ignore", category=PerformanceWarning)
 warnings.simplefilter("ignore", category=ImplicitModificationWarning)
@@ -63,8 +67,34 @@ def run_mutual_information(rna_data: AnnData,
                                                    seed=seed)
 
 
-def run_mlp_ig(training_data, test_data):
-    return None
+def run_mlp_ig(trained_model: GeneExpressionModel,
+               rna_data: AnnData,
+               labeling_df: pd.DataFrame,
+               fitted_scaler: StandardScaler):
+    scaled_expression_levels_df = pd.DataFrame(
+        data=fitted_scaler.transform(rna_data.to_df()),
+        index=rna_data.obs_names,
+        columns=rna_data.var["gene_name"])
+
+    return mlp_with_integrated_gradient.calculate_scores(trained_model,
+                                                         expression_levels_df=scaled_expression_levels_df,
+                                                         labeling_df=labeling_df)
+
+
+def get_trained_model(training_data: AnnData,
+                      test_split_size: int,
+                      seed: int,
+                      subsample_size: int):
+    n_genes = training_data.n_vars
+    n_cells = training_data.n_obs
+
+    return gene_expression_mlp_model.load_trained_model(
+        n_genes=n_genes,
+        n_cells=n_cells,
+        test_split_size=test_split_size,
+        seed=seed,
+        subsample_size=subsample_size
+    )
 
 
 def main(args):
@@ -123,7 +153,15 @@ def main(args):
                                              seed=seed,
                                              k_neighbors=k_neighbors)
         case m if m == config.METHOD_MLP:
-            results = run_mlp_ig(training_data)
+
+            trained_model = get_trained_model(training_data=rna_training_data,
+                                              test_split_size=test_split_size,
+                                              seed=seed,
+                                              subsample_size=subsample_size)
+
+            results = run_mlp_ig(rna_test_data,
+                                 target_df,
+                                 scaler)
         case _:
             raise ValueError(f"No such method: {method}")
 
