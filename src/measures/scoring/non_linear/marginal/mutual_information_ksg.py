@@ -1,10 +1,12 @@
-import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 from sklearn.feature_selection import mutual_info_classif
 
-import config
+from src import config
 
+from src.logs import get_logger
+
+log = get_logger()
 
 def compute_mi_scores(cell_type: str,
                       expression_levels_df: pd.DataFrame,
@@ -28,6 +30,9 @@ def calculate_scores(expression_levels_df: pd.DataFrame,
     """Computes the marginal KSG Mutual Information for every gene against
     every cell type.
 
+    KSG: A. Kraskov, H. Stogbauer and P. Grassberger, "Estimating mutual
+           information". Phys. Rev. E 69, 2004.
+
     Parameters
     ----------
     expression_levels_df : pd.DataFrame
@@ -46,6 +51,8 @@ def calculate_scores(expression_levels_df: pd.DataFrame,
     results: pd.DataFrame
         A long-form dataframe or a wide matrix mapping Genes to their MI scores.
       """
+
+    log.info("Computing Non-Linear/marginal scoring: Mutual Information (KSG)")
 
     # n_jobs=-1 will utilize all available CPU cores automatically
     n_jobs = -1

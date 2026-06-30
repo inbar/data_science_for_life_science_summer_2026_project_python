@@ -9,7 +9,7 @@ import argparse
 # In the project root
 
 from src.persistence import datasets as dataset_persistence
-from src.config import DEFAULT_LEVEL
+from src import config
 
 from src.logs import get_logger
 
@@ -50,7 +50,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--level", type=str, default=DEFAULT_LEVEL)
+    parser.add_argument("--level", type=str, default=config.DEFAULT_LEVEL)
     parsed_args = parser.parse_args()
 
     main(parsed_args)
