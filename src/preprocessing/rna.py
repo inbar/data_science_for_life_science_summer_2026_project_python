@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import scanpy as sc
-import scipy as sp
 from anndata import AnnData
 from sklearn.preprocessing import StandardScaler
 
@@ -99,28 +98,6 @@ def get_highly_variable_genes(dataset: AnnData):
     return dataset.var["gene_name"][dataset.var["highly_variable"]]
 
 
-def rank_transform_in_place(dataset):
-    if sp.sparse.isspmatrix(dataset.X):
-        X = dataset.X.todense()
-    else:
-        X = dataset.X
-
-    X_ranked = sp.stats.rankdata(X, axis=0, method='average')
-    dataset.layers[LAYER_NAME_RANK_TRANSFORMED] = X_ranked
-
-
-# TODO: remove?
-def build_matrix_of_interest(dataset):
-    """Shared (cells x HVG) rank-transformed/z-scored matrix"""
-
-    X = dataset.layers[LAYER_NAME_LOGARITHMIZED]
-
-    # Layers on the main dataset should always be in a sparse representation
-    # Convert to dense representation
-    X = np.asarray(X.todense())
-    return X
-
-
 def build_target_df(dataset,
                     level) -> pd.DataFrame:
     """Creates a binary one-hot encoded matrix mapping cells to their specific cell types.
@@ -153,42 +130,3 @@ def build_target_df(dataset,
     )
 
 
-def perform_pca_in_place(dataset,
-                         n_pcs=config.N_PCS,
-                         seed=config.DEFAULT_SEED):
-    """Perform PCA
-
-    Stores: X_pca
-    """
-    sc.pp.pca(dataset, n_comps=n_pcs, random_state=seed)
-
-
-def perform_pca_harmony_in_place(dataset,
-                                 donor_key=config.DONOR_KEY):
-    """Perform PCA with harmony batch correction
-
-    Stores: X_pca_harmoby
-    """
-
-    sc.external.pp.harmony_integrate(dataset, donor_key)
-
-
-def perform_umap_in_place(dataset,
-                          n_pcs=config.N_PCS,
-                          seed=config.DEFAULT_SEED):
-    """Perform UMAP
-
-    Stores: X_umap
-    """
-    sc.pp.neighbors(dataset, n_pcs=n_pcs, random_state=seed)
-    sc.tl.umap(dataset, random_state=seed)
-
-
-def perform_umap_harmony_in_place(dataset,
-                                  seed=config.DEFAULT_SEED):
-    """Perform UMAP with harmony batch correction
-
-    Stores: X_umap_harmony
-    """
-    sc.pp.neighbors(dataset, use_rep=OBSM_NAME_PCA_HARMONY, random_state=seed)
-    sc.tl.umap(dataset, random_state=seed, key_added=OBSM_NAME_UMAP_HARMONY)
