@@ -36,25 +36,25 @@ def main(args):
         level=level
     )
 
-    rna_training_dataset = training_data["rna"]
-    adt_training_dataset = training_data["adt"]
+    training_data_rna = training_data["rna"]
+    training_data_adt = training_data["adt"]
 
     '''
     Feature selection (reduce genes)
     '''
     # Find highly variable genes
     # This must be done only on the training data to prevent data leakage!
-    rna_preprocessing.annotate_highly_variable_genes(rna_training_dataset)
+    rna_preprocessing.annotate_highly_variable_genes(training_data_rna)
 
     # Extract the gene names
-    hv_genes = rna_preprocessing.get_highly_variable_genes(rna_training_dataset)
+    hv_genes = rna_preprocessing.get_highly_variable_genes(training_data_rna)
 
     # Extract protein names
-    protein_names = adt_training_dataset.var["protein_name"]
+    protein_names = training_data_adt.var["protein_name"]
 
     marker_genes_for_proteins = mappings.get_marker_genes_for_proteins(
         protein_names)
-    all_expressed_genes = set(rna_training_dataset.var["gene_name"])
+    all_expressed_genes = set(training_data_rna.var["gene_name"])
 
     # Take the intersection between all expressed genes and the
     # interesting marker genes for the surface proteins
@@ -70,11 +70,11 @@ def main(args):
     '''
     Filtering the data
     '''
-    genes_of_interest_mask = rna_training_dataset.var["gene_name"].isin(
+    genes_of_interest_mask = training_data_rna.var["gene_name"].isin(
         sorted(genes_of_interest))
 
     # Subset the RNA modality of the training data
-    training_data.mod["rna"] = rna_training_dataset[
+    training_data.mod["rna"] = training_data_rna[
         :, genes_of_interest_mask].copy()
     # Update the parent MuData object
     training_data.update()

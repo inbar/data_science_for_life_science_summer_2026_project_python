@@ -10,10 +10,12 @@ import warnings
 from anndata import ImplicitModificationWarning
 from pandas.errors import PerformanceWarning
 
+from src import config
 from src.logs import get_logger
 from src.persistence import datasets as dataset_persistence
 from src.persistence import splits as splits_persistence
 from src.preprocessing import splitting
+from src.preprocessing import rna as rna_preprocessing
 
 warnings.simplefilter("ignore", category=PerformanceWarning)
 warnings.simplefilter("ignore", category=ImplicitModificationWarning)
@@ -35,6 +37,9 @@ def main(args):
                                                test_split_size=test_split_size / 100,
                                                seed=seed)
 
+    # Scaling both datasets and saving as a layer to be used in downstream computations
+    rna_preprocessing.scale_to_layer(training_data, test_data)
+
     splits_persistence.save_split(training_data=training_data,
                                   test_data=test_data,
                                   test_split_size=test_split_size,
@@ -45,7 +50,8 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--subsample_size", type=int, default=config.DEFAULT_SUBSAMPLE_SIZE)
+    parser.add_argument("--subsample_size", type=int,
+                        default=config.DEFAULT_SUBSAMPLE_SIZE)
     parser.add_argument("--level", type=str, default=config.DEFAULT_LEVEL)
     parser.add_argument("--test_split_size", type=int,
                         default=config.DEFAULE_TEST_SPLIT_SIZE)

@@ -50,6 +50,7 @@ DONOR_KEY = "donor"
 MIN_DRIVERS = 2  # exclude cell types with |D_c| < MIN_DRIVERS
 DEFAULE_TEST_SPLIT_SIZE = 15
 DEFAULT_K_NEIGHBORS = 3
+DEFAULT_N_EPOCHS = 3
 
 # --------------------------------------------------------------------------- #
 # Method labels (consistent ordering / naming everywhere)

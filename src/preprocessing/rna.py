@@ -3,6 +3,7 @@ import pandas as pd
 import scanpy as sc
 import scipy as sp
 from anndata import AnnData
+from sklearn.preprocessing import StandardScaler
 
 from src import config
 from src import logs
@@ -13,6 +14,7 @@ LAYER_NAME_RAW_COUNTS = "raw_counts"
 LAYER_NAME_NORMALIZED_COUNTS = "normalized_counts"
 LAYER_NAME_LOGARITHMIZED = "logarithmized"
 LAYER_NAME_RANK_TRANSFORMED = "rank_transformed"
+LAYER_NAME_SCALED = "scaled"
 OBSM_NAME_PCA = "X_pca"
 OBSM_NAME_PCA_HARMONY = "X_pca_harmony"
 OBSM_NAME_UMAP = "X_umap"
@@ -31,19 +33,36 @@ def calculate_qc_metrics_in_place(dataset):
                                log1p=False)
 
 
-def scale_in_place(dataset):
-    if sp.sparse.isspmatrix(dataset.X):
-        dataset.X = dataset.X.todense()
+def scale_to_layer(training_data: AnnData,
+                   test_data: AnnData):
+    """ Scale the data and save in a layer. This is needed later on.
 
-    sc.pp.scale(dataset, max_value=10)
+        The scaling goes as follows:
+            1. Find the parameters (mean, sd) of the training data (fit)
+            2. Transform the training data and save in a layer (do not change the main matrix)
+            3. Transform the test data *based on the parameters from the training data
+            and save in a layer (do not change the main matrix)
+    """
+    training_data_rna = training_data["rna"]
+    test_data_rna = test_data["rna"]
+
+    scaler = StandardScaler()
+
+    # Fit, scale and save the training data
+    training_data_scaled = scaler.fit_transform(training_data_rna.to_df())
+    training_data_rna.layers[LAYER_NAME_SCALED] = training_data_scaled
+
+    # Scale and save the test data based on the parameters from the training
+    # dataset.
+    test_data_scaled = scaler.transform(test_data_rna.to_df())
+    test_data_rna.layers[LAYER_NAME_SCALED] = test_data_scaled
 
 
 def apply_basic_filtering(dataset: AnnData,
                           level: str,
                           min_gene_count=200,
                           max_pct_mito=20.0):
-    """
-    Data is already filtered to begin with.
+    """Data is already filtered to begin with.
     The filtering here is for extra caution.
 
     Keep only genes with:
@@ -63,8 +82,7 @@ def apply_basic_filtering(dataset: AnnData,
 
 def annotate_highly_variable_genes(dataset: AnnData,
                                    n_top: int = config.N_TOP_HVGs):
-    """
-    This method extends the gene (var) annotations in place.
+    """This method extends the gene (var) annotations in place.
 
     See the documentation for details about the added annotations:
         https://scanpy.scverse.org/en/stable/generated/scanpy.pp.highly_variable_genes.html

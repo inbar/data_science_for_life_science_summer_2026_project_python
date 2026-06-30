@@ -9,6 +9,7 @@ import warnings
 
 import pandas as pd
 from anndata import ImplicitModificationWarning, AnnData
+from pandas.core.indexes import category
 from pandas.errors import PerformanceWarning
 from sklearn.preprocessing import StandardScaler
 
@@ -84,13 +85,14 @@ def run_mlp_ig(trained_model: GeneExpressionModel,
 def get_trained_model(training_data: AnnData,
                       test_split_size: int,
                       seed: int,
-                      subsample_size: int):
+                      subsample_size: int,
+                      level: str):
     n_genes = training_data.n_vars
-    n_cells = training_data.n_obs
+    n_cell_types = training_data.obs[level].nunique()
 
     return gene_expression_mlp_model.load_trained_model(
         n_genes=n_genes,
-        n_cells=n_cells,
+        n_cells=n_cell_types,
         test_split_size=test_split_size,
         seed=seed,
         subsample_size=subsample_size
@@ -121,20 +123,20 @@ def main(args):
         level=level
     )
 
-    rna_training_data = training_data["rna"]
-    rna_test_data = test_data["rna"]
-    target_df = rna_preprocessing.build_target_df(rna_test_data, level)
+    training_data_rna = training_data["rna"]
+    test_data_rna = test_data["rna"]
+    target_df = rna_preprocessing.build_target_df(test_data_rna, level)
 
     log.info("Training data (RNA modality):")
     log.info("-----------------------------")
-    log.info(f"  n_cells (rows): {rna_training_data.n_obs}")
-    log.info(f"  n_genes (cols): {rna_training_data.n_vars}")
+    log.info(f"  n_cells (rows): {training_data_rna.n_obs}")
+    log.info(f"  n_genes (cols): {training_data_rna.n_vars}")
     log.info("")
 
     log.info("Test data (RNA modality):")
     log.info("-----------------------------")
-    log.info(f"  n_cells (rows): {rna_test_data.n_obs}")
-    log.info(f"  n_genes (cols): {rna_test_data.n_vars}")
+    log.info(f"  n_cells (rows): {test_data_rna.n_obs}")
+    log.info(f"  n_genes (cols): {test_data_rna.n_vars}")
     log.info("")
 
     scaler = StandardScaler()
@@ -142,24 +144,24 @@ def main(args):
 
     match method:
         case m if m == config.METHOD_SPEARMAN:
-            results = run_spearman(rna_test_data, target_df)
+            results = run_spearman(test_data_rna, target_df)
         case m if m == config.METHOD_PC:
-            results = run_partial_correlation(rna_test_data,
+            results = run_partial_correlation(test_data_rna,
                                               target_df,
                                               scaler)
         case m if m == config.METHOD_MI:
-            results = run_mutual_information(rna_test_data,
+            results = run_mutual_information(test_data_rna,
                                              target_df,
                                              seed=seed,
                                              k_neighbors=k_neighbors)
         case m if m == config.METHOD_MLP:
 
-            trained_model = get_trained_model(training_data=rna_training_data,
+            trained_model = get_trained_model(training_data=training_data_rna,
                                               test_split_size=test_split_size,
                                               seed=seed,
                                               subsample_size=subsample_size)
 
-            results = run_mlp_ig(rna_test_data,
+            results = run_mlp_ig(test_data_rna,
                                  target_df,
                                  scaler)
         case _:
