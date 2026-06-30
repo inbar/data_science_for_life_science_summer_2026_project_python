@@ -31,11 +31,12 @@ import pandas as pd
 import scipy.io
 from mudata import MuData
 
-from src import logs
 from src.persistence import subsampling
 from src import config
 
-log = logs.get_logger()
+import logging
+
+log = logging.getLogger(__file__)
 
 # Avoid warning message
 mudata.set_options(pull_on_update=False)
@@ -58,8 +59,8 @@ ADT_BARCODES_FILE_NAME = "GSM5008738_ADT_3P-barcodes.tsv.gz"
 ADT_FEATURES_FILE_NAME = "GSM5008738_ADT_3P-features.tsv.gz"
 
 # File paths
-RAW_ARCHIVE_PATH = config.ROOT / RAW_ARCHIVE_FILE_NAME
-RAW_METADATA_PATH = config.ROOT / RAW_METADATA_FILE_NAME
+RAW_ARCHIVE_PATH = config.PROJECT_REPO_ROOT / RAW_ARCHIVE_FILE_NAME
+RAW_METADATA_PATH = config.PROJECT_REPO_ROOT / RAW_METADATA_FILE_NAME
 
 # Processed files
 # Dir Paths

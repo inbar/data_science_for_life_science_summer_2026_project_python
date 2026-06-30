@@ -11,16 +11,19 @@ from anndata import ImplicitModificationWarning
 from pandas.errors import PerformanceWarning
 
 from src import config
-from src.logs import get_logger
+from src import logs
 from src.persistence import datasets as dataset_persistence
 from src.persistence import splits as splits_persistence
-from src.preprocessing import splitting
 from src.preprocessing import rna as rna_preprocessing
+from src.preprocessing import splitting
 
 warnings.simplefilter("ignore", category=PerformanceWarning)
 warnings.simplefilter("ignore", category=ImplicitModificationWarning)
 
-log = get_logger()
+import logging
+
+logs.setup_logging(__file__)
+log = logging.getLogger(__file__)
 
 
 def main(args):

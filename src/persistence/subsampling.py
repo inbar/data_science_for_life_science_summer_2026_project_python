@@ -4,7 +4,9 @@ from mudata import MuData
 from src import config
 from src import logs
 
-log = logs.get_logger()
+import logging
+
+log = logging.getLogger(__file__)
 
 
 def subsample_barcodes(rna_dataset,

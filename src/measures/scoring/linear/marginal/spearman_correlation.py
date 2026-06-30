@@ -2,9 +2,9 @@ import numpy as np
 import pandas as pd
 import scipy.stats
 
-from src.logs import get_logger
+import logging
 
-log = get_logger()
+log = logging.getLogger(__file__)
 
 
 def calculate_scores(expression_levels_df: pd.DataFrame,

@@ -6,9 +6,9 @@ from src.deep_learning import data_conversion
 from src.deep_learning.gene_expression_mlp_model import GeneExpressionModel
 from src.deep_learning.pytorch_device import get_device
 
-from src.logs import get_logger
+import logging
 
-log = get_logger()
+log = logging.getLogger(__file__)
 
 def calculate_scores(trained_model: GeneExpressionModel,
                      expression_levels_df: pd.DataFrame,

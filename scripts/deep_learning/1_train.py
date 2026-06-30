@@ -12,7 +12,6 @@ from pandas.errors import PerformanceWarning
 
 from src.deep_learning import training
 from src import config
-from src.logs import get_logger
 from src.persistence import splits as split_persistence
 from src.persistence import models as model_persistence
 from src.preprocessing import rna as rna_preprocessing
@@ -20,7 +19,9 @@ from src.preprocessing import rna as rna_preprocessing
 warnings.simplefilter("ignore", category=PerformanceWarning)
 warnings.simplefilter("ignore", category=ImplicitModificationWarning)
 
-log = get_logger()
+import logging
+
+log = logging.getLogger(__file__)
 
 def main(args):
     subsample_size = args.subsample_size

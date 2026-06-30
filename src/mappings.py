@@ -13,9 +13,9 @@ to an empty list and are dropped from the ground truth.
 """
 from __future__ import annotations
 
-from src.logs import get_logger
+import logging
 
-log = get_logger()
+log = logging.getLogger(__file__)
 
 # Ground Truth Mapping: Cell Type -> Primary Expected Protein
 # From: Hao et al.

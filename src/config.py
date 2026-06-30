@@ -10,16 +10,20 @@ from pathlib import Path
 # --------------------------------------------------------------------------- #
 # Paths (resolved relative to the project root, i.e. the parent of ``src/``).
 # --------------------------------------------------------------------------- #
-ROOT = Path(__file__).resolve().parents[1]
+PROJECT_REPO_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_HOME = Path.home() / ".data_science_project"
 
 # Persistance
-PERSISTANCE_DIR = ROOT / "persistence"
-RAW_DATA_DIR = PERSISTANCE_DIR / "raw_data"
-PROCESSED_DATA = PERSISTANCE_DIR / "processed_data"
+PERSISTANCE_DIR = PROJECT_HOME / "persistence"
+DATA_DIR = PROJECT_HOME / "data"
+RAW_DATA_DIR = DATA_DIR / "raw_data"
+PROCESSED_DATA = DATA_DIR / "processed_data"
 
-RESULTS_DIR_PATH = ROOT / "results"
+RESULTS_DIR_PATH = PERSISTANCE_DIR / "results"
 FIGURES_DIR_PATH = RESULTS_DIR_PATH / "figures"
 TABLES_DIR_PATH = RESULTS_DIR_PATH / "tables"
+
+LOGS_DIR_PATH = PROJECT_HOME / "logs"
 
 for path in (RESULTS_DIR_PATH,
              FIGURES_DIR_PATH,

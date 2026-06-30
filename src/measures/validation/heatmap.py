@@ -3,9 +3,10 @@ import pandas as pd
 from anndata import AnnData
 from matplotlib import pyplot as plt
 
-from logs import get_logger
+import logging
 
-log = get_logger()
+log = logging.getLogger(__file__)
+
 
 def calculate_validation_data(results_df: pd.DataFrame,
                               top_k_genes=5) -> pd.DataFrame:
@@ -56,7 +57,7 @@ def plot(top_gene_df: pd.DataFrame,
 
     # Group all cell types and save the mean value
     normalized_df = normalized_df.groupby("cell_type",
-                                                  observed=True).mean()
+                                          observed=True).mean()
 
     # Transpose: cell type in the columns, genes in the rows,
     normalized_df = normalized_df.T
@@ -77,7 +78,6 @@ def plot(top_gene_df: pd.DataFrame,
     x_vals = df.columns
     ax.set_xticks(np.arange(len(x_vals)))
     ax.set_xticklabels(x_vals, rotation=45, ha='right', fontsize=6)
-
 
     # Y-axis: Top Driver Genes
     ax.set_yticks(np.arange(len(df.index)))

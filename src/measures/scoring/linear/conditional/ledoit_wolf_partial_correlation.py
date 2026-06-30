@@ -3,9 +3,9 @@ import pandas as pd
 
 from sklearn.covariance import ledoit_wolf
 
-from src.logs import get_logger
+import logging
 
-log = get_logger()
+log = logging.getLogger(__file__)
 
 def calculate_scores(expression_levels_df: pd.DataFrame,
                      labeling_df: pd.DataFrame) -> pd.DataFrame:

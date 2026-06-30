@@ -9,27 +9,29 @@ import warnings
 
 import pandas as pd
 from anndata import ImplicitModificationWarning, AnnData
-from pandas.core.indexes import category
 from pandas.errors import PerformanceWarning
 from sklearn.preprocessing import StandardScaler
 
-from src.deep_learning.gene_expression_mlp_model import GeneExpressionModel
-from src.deep_learning import gene_expression_mlp_model
 from src import config
-from src.logs import get_logger
-from src.persistence import splits as split_persistence
-from src.preprocessing import rna as rna_preprocessing
-from src.measures.scoring.linear.marginal import spearman_correlation
+from src import logs
+from src.deep_learning import gene_expression_mlp_model
+from src.deep_learning.gene_expression_mlp_model import GeneExpressionModel
 from src.measures.scoring.linear.conditional import \
     ledoit_wolf_partial_correlation
-from src.measures.scoring.non_linear.marginal import mutual_information_ksg
+from src.measures.scoring.linear.marginal import spearman_correlation
 from src.measures.scoring.non_linear.conditional import \
     mlp_with_integrated_gradient
+from src.measures.scoring.non_linear.marginal import mutual_information_ksg
+from src.persistence import splits as split_persistence
+from src.preprocessing import rna as rna_preprocessing
 
 warnings.simplefilter("ignore", category=PerformanceWarning)
 warnings.simplefilter("ignore", category=ImplicitModificationWarning)
 
-log = get_logger()
+import logging
+
+logs.setup_logging(__file__)
+log = logging.getLogger(__file__)
 
 
 def run_spearman(rna_data: AnnData,

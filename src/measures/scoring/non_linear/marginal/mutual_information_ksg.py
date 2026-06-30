@@ -4,9 +4,9 @@ from sklearn.feature_selection import mutual_info_classif
 
 from src import config
 
-from src.logs import get_logger
+import logging
 
-log = get_logger()
+log = logging.getLogger(__file__)
 
 def compute_mi_scores(cell_type: str,
                       expression_levels_df: pd.DataFrame,

@@ -1,29 +1,28 @@
 #!/usr/bin/env python
 import argparse
+import warnings
 
+from anndata import ImplicitModificationWarning
+from pandas.errors import PerformanceWarning
 
-
+from src import config
+from src import logs
+from src.persistence import datasets as dataset_persistence
+from src.preprocessing import normalization
+from src.preprocessing import rna as rna_preprocessing
 
 # To run the scripts run:
 # source setup_environment.sh
 # In the project root
 
-from src.persistence import datasets as dataset_persistence
-from src import config
-
-from src.logs import get_logger
-
-import warnings
-from pandas.errors import PerformanceWarning
-from anndata import ImplicitModificationWarning
-from src.preprocessing import normalization
-from src.preprocessing import rna as rna_preprocessing
-
 
 warnings.simplefilter("ignore", category=PerformanceWarning)
 warnings.simplefilter("ignore", category=ImplicitModificationWarning)
 
-log = get_logger()
+import logging
+
+logs.setup_logging(__file__)
+log = logging.getLogger(__file__)
 
 
 def main(args):

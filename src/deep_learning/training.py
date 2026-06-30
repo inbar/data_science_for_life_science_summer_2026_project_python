@@ -5,10 +5,11 @@ from torch import nn, optim
 from src import config
 from src.deep_learning import pytorch_device, data_conversion
 from src.deep_learning.gene_expression_mlp_model import GeneExpressionModel
-from src.logs import get_logger
 from src.preprocessing.rna import LAYER_NAME_SCALED
 
-log = get_logger()
+import logging
+
+log = logging.getLogger(__file__)
 
 
 def get_hyperparameters(model: nn.Module):

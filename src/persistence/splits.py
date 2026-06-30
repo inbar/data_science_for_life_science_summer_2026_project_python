@@ -3,10 +3,11 @@ from pathlib import Path
 from mudata import MuData
 
 from src import config
-from src.logs import get_logger
 from src.persistence import datasets
 
-log = get_logger()
+import logging
+
+log = logging.getLogger(__file__)
 
 SPLITS_ROOT_DIR = config.PERSISTANCE_DIR / "data_splits"
 SPLIT_DIR_NAME_TEMPLATE = "split_{test_split_size}/seed_{seed}"

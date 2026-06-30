@@ -5,9 +5,9 @@ from anndata import AnnData
 from sklearn.preprocessing import StandardScaler
 
 from src import config
-from src import logs
+import logging
 
-log = logs.get_logger()
+log = logging.getLogger(__file__)
 
 LAYER_NAME_RAW_COUNTS = "raw_counts"
 LAYER_NAME_NORMALIZED_COUNTS = "normalized_counts"
@@ -128,5 +128,3 @@ def build_target_df(dataset,
         index=dataset.obs_names,
         columns=cell_types
     )
-
-

@@ -5,19 +5,22 @@
 # In the project root
 
 import argparse
+import warnings
 
-from src.persistence import datasets as dataset_persistence
+from anndata import ImplicitModificationWarning
+from pandas.errors import PerformanceWarning
 
 from src import config
-from src.logs import get_logger
-import warnings
-from pandas.errors import PerformanceWarning
-from anndata import ImplicitModificationWarning
+from src import logs
+from src.persistence import datasets as dataset_persistence
 
 warnings.simplefilter("ignore", category=PerformanceWarning)
 warnings.simplefilter("ignore", category=ImplicitModificationWarning)
 
-log = get_logger()
+import logging
+
+logs.setup_logging(__file__)
+log = logging.getLogger(__file__)
 
 
 def main(args):
