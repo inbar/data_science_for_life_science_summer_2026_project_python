@@ -15,9 +15,11 @@ def normalize_in_place(dataset):
     # Logarithmize and store in layer
     dataset.layers[LAYER_NAME_LOGARITHMIZED] = sc.pp.log1p(dataset, copy=True).X
 
+
     # Compute CLR
     dataset.X = dataset.X.tocsc().astype('float32')
     mu.prot.pp.clr(dataset)
+
 
     # Store clr normalized data in a layer
     dataset.layers[LAYER_NAME_CENTERED_LOG_RATIO] = dataset.X.copy()

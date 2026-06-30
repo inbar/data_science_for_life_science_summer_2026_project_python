@@ -1,12 +1,13 @@
 from mudata import MuData
 from sklearn.model_selection import train_test_split
 
+from src import config
+
 
 def split(dataset: MuData,
-          test_split_size: float,
-          seed: int):
+          test_split_size: float = config.DEFAULE_TEST_SPLIT_SIZE / 100,
+          seed: int = config.DEFAULT_SEED):
 
-    # TODO: dataset must be filter to genes of interest!
     barcodes = dataset.obs_names.to_list()
 
     barcodes_training_subset, barcodes_test_subset = train_test_split(

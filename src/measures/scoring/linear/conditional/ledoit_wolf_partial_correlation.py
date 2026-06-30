@@ -3,6 +3,9 @@ import pandas as pd
 
 from sklearn.covariance import ledoit_wolf
 
+from src.logs import get_logger
+
+log = get_logger()
 
 def calculate_scores(expression_levels_df: pd.DataFrame,
                      labeling_df: pd.DataFrame) -> pd.DataFrame:
@@ -25,6 +28,8 @@ def calculate_scores(expression_levels_df: pd.DataFrame,
         A DataFrame of shape (n_genes, n_cell_types) containing the
         shrunk covariance scores between each gene and cell type.
     """
+
+    log.info("Computing Linear/Conditional scoring: partial correlation (Leodit-Wolf)")
     num_genes = expression_levels_df.columns.size
 
     # Horizontally stack X and Y into a single matrix for global covariance.

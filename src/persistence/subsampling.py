@@ -1,7 +1,7 @@
 import numpy as np
 from mudata import MuData
 
-import config
+from src import config
 from src import logs
 
 log = logs.get_logger()
@@ -11,7 +11,7 @@ def subsample_barcodes(rna_dataset,
                        level,
                        subsample_size,
                        floor=50,
-                       seed=config.SEED):
+                       seed=config.DEFAULT_SEED):
     """
     Select a subsample using square-root proportional stratified subsampling
     (Square Root Compromise Allocation [Cochran, 1977]).
@@ -60,7 +60,7 @@ def subsample_barcodes(rna_dataset,
 def subsample(dataset: MuData,
               level,
               subsample_size,
-              seed=config.SEED):
+              seed=config.DEFAULT_SEED):
     barcodes_to_keep = subsample_barcodes(rna_dataset=dataset["rna"],
                                           level=level,
                                           subsample_size=subsample_size,
