@@ -1,10 +1,16 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
 
 # Paths
 PROJECT_REPO_ROOT = Path(__file__).resolve().parents[1]
-PROJECT_HOME = Path.home() / ".data_science_project"
+
+PROJECT_HOME_ROOT_ENV_VAR_NAME="PROJECT_HOME_ROOT"
+DEFAULT_PROJECT_HOME_ROOT = Path.home()
+PROJECT_HOME_ROOT = os.environ.get(PROJECT_HOME_ROOT_ENV_VAR_NAME, DEFAULT_PROJECT_HOME_ROOT)
+
+PROJECT_HOME = Path(PROJECT_HOME_ROOT) / ".data_science_project"
 
 # Persistence
 PERSISTENCE_DIR = PROJECT_HOME / "persistence"
