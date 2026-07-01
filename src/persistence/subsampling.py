@@ -1,10 +1,9 @@
+import logging
+
 import numpy as np
 from mudata import MuData
 
 from src import config
-from src import logs
-
-import logging
 
 log = logging.getLogger(__file__)
 

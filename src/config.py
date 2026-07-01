@@ -23,10 +23,6 @@ for path in (RESULTS_DIR_PATH,
              TABLES_DIR_PATH):
     path.mkdir(parents=True, exist_ok=True)
 
-
-
-
-
 FTP_URL = "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164378/suppl/"
 
 # Defaults
@@ -47,28 +43,32 @@ DEFAULE_TEST_SPLIT_SIZE = 15
 DEFAULT_K_NEIGHBORS = 3
 DEFAULT_N_EPOCHS = 3
 
+DEFAULT_GROUND_TRUTH_TOP_K = 10
+DEFAULT_GROUND_TRUTH_P_VAL_CUTOFF = 0.05
+DEFAULT_GROUND_TRUTH_LOG2FC_MIN = 0.0
+
 # Method labels
 
 METHOD_SPEARMAN = "spearman"
-METHOD_PC = "partial_corr"
-METHOD_MI = "mi_ksg"
-METHOD_MLP = "ig_mlp"
+METHOD_PARTIAL_CORRELATION = "partial_corr"
+METHOD_MI_KSG = "mi_ksg"
+METHOD_IG_MLP = "ig_mlp"
 
-METHODS = [METHOD_SPEARMAN, METHOD_PC, METHOD_MI, METHOD_MLP]
+METHODS = [METHOD_SPEARMAN, METHOD_PARTIAL_CORRELATION, METHOD_MI_KSG,
+           METHOD_IG_MLP]
 METHOD_LABELS = {
-    "spearman": "Spearman",
-    "partial_corr": "Partial correlation",
-    "mi_ksg": "Mutual information (KSG)",
-    "ig_mlp": "Integrated Gradients (MLP)",
+    METHOD_SPEARMAN: "Spearman",
+    METHOD_PARTIAL_CORRELATION: "Partial correlation",
+    METHOD_MI_KSG: "Mutual information (KSG)",
+    METHOD_IG_MLP: "Integrated Gradients (MLP)",
 }
 
 METHOD_GRID = {
-    "spearman": ("linear", "marginal"),
-    "partial_corr": ("linear", "conditional"),
-    "mi_ksg": ("nonlinear", "marginal"),
-    "ig_mlp": ("nonlinear", "conditional"),
+    METHOD_SPEARMAN: ("linear", "marginal"),
+    METHOD_PARTIAL_CORRELATION: ("linear", "conditional"),
+    METHOD_MI_KSG: ("nonlinear", "marginal"),
+    METHOD_IG_MLP: ("nonlinear", "conditional"),
 }
-
 
 # Conda env
 ENV_NAME = "data_science_in_life_sciences_project_2026_group_1"

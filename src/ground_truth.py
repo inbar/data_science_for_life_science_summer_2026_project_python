@@ -2,15 +2,18 @@ from __future__ import annotations
 
 import pandas as pd
 import scanpy as sc
+from anndata import AnnData
 
+import config
 from preprocessing.adt import LAYER_NAME_LOGARITHMIZED
 from src.mappings import map_protein_to_genes
 
-def compute_marker_proteins(dataset,
-                            group_by,
-                            pval_cutoff=0.05,
-                            log2fc_min=0.0,
-                            top_k=10)-> pd.DataFrame:
+
+def compute_marker_proteins(adt_dataset: AnnData,
+                            level: str,
+                            pval_cutoff: float = config.DEFAULT_GROUND_TRUTH_P_VAL_CUTOFF,
+                            log2fc_min: float = config.DEFAULT_GROUND_TRUTH_LOG2FC_MIN,
+                            top_k: int = config.DEFAULT_GROUND_TRUTH_TOP_K) -> pd.DataFrame:
     """Find top_k elevated proteins per cell type.
 
     To find elevated proteins we apply a one-vs-rest differential analysis
@@ -29,15 +32,15 @@ def compute_marker_proteins(dataset,
     # using logarithmized data (not CLR, which typically contains negative values).
     #
     # Pick the top_k proteins.
-    sc.tl.rank_genes_groups(dataset,
+    sc.tl.rank_genes_groups(adt_dataset,
                             use_raw=False,
                             layer=LAYER_NAME_LOGARITHMIZED,
-                            groupby=group_by,
+                            groupby=level,
                             n_genes=top_k,
                             method="wilcoxon")
 
     # Extract the results while applying the cutoffs.
-    df = sc.get.rank_genes_groups_df(dataset,
+    df = sc.get.rank_genes_groups_df(adt_dataset,
                                      group=None,
                                      gene_symbols="protein_name",
                                      log2fc_min=log2fc_min,
@@ -49,12 +52,13 @@ def compute_marker_proteins(dataset,
     return df
 
 
-def build_ground_truth(adt_dataset,
-                       group_by,
-                       genes_of_interest,
-                       pval_cutoff=0.05,
-                       log2fc_min=0.0,
-                       top_k=10) -> dict[str, set]:
+def build_ground_truth(adt_dataset: AnnData,
+                       genes_of_interest: list[str],
+                       level: str = config.DEFAULT_LEVEL,
+                       pval_cutoff: float = config.DEFAULT_GROUND_TRUTH_P_VAL_CUTOFF,
+                       log2fc_min: float = config.DEFAULT_GROUND_TRUTH_LOG2FC_MIN,
+                       top_k: int = config.DEFAULT_GROUND_TRUTH_TOP_K) -> dict[
+    str, set]:
     """
     Build the ground truth mapping: Cell -> set of drive genes
 
@@ -73,8 +77,8 @@ def build_ground_truth(adt_dataset,
             long DataFrame of elevated proteins with their mapped genes.
     """
 
-    marker_proteins = compute_marker_proteins(dataset=adt_dataset,
-                                              group_by=group_by,
+    marker_proteins = compute_marker_proteins(adt_dataset=adt_dataset,
+                                              level=level,
                                               pval_cutoff=pval_cutoff,
                                               log2fc_min=log2fc_min,
                                               top_k=top_k)

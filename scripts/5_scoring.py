@@ -148,16 +148,16 @@ def main(args):
     match method:
         case m if m == config.METHOD_SPEARMAN:
             results = run_spearman(test_data_rna, target_df)
-        case m if m == config.METHOD_PC:
+        case m if m == config.METHOD_PARTIAL_CORRELATION:
             results = run_partial_correlation(test_data_rna,
                                               target_df,
                                               scaler)
-        case m if m == config.METHOD_MI:
+        case m if m == config.METHOD_MI_KSG:
             results = run_mutual_information(test_data_rna,
                                              target_df,
                                              seed=seed,
                                              k_neighbors=k_neighbors)
-        case m if m == config.METHOD_MLP:
+        case m if m == config.METHOD_IG_MLP:
             trained_model = get_trained_model(training_data=training_data_rna,
                                               test_split_size=test_split_size,
                                               seed=seed,

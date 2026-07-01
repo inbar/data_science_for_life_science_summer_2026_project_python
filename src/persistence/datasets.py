@@ -66,7 +66,7 @@ RAW_METADATA_PATH = config.PROJECT_REPO_ROOT / RAW_METADATA_FILE_NAME
 # Dir Paths
 FULL_DATASETS_ROOT_DIR = config.PROCESSED_DATA / "full_datasets"
 SUBSAMPLE_DATASETS_ROOT_DIR = config.PROCESSED_DATA / "subsampled_datasets"
-SUBSAMPLE_DATASET_SUBDIR_TEMPLATE = "subsample_{subsample_size}/seed_{seed}"
+SUBSAMPLE_DATASET_SUBDIR_TEMPLATE = "subsample_{subsample_size}_seed_{seed}"
 
 # File names
 DATASET_FILENAME = "multi_modal_dataset.h5mu"
