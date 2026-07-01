@@ -1,13 +1,6 @@
-# ️WIP: code cleanup 
-1. ~~Data download and dataset loading (`data.py`)~~  ✅
-2. WIP: Create a non-generated notebook (based on the existing ones)
-   * ~~Normalization and preprocessing~~ ✅
-   * Dimentionality reduction
-   * Cell-type label validation
-4. Refactor and clean up .py scripts one by one
-
-
 # Benchmarking dependency measures for marker-gene identification in multi-modal single-cell data
+
+## Introduction
 
 A 2×2 benchmark of dependency measures for identifying cell-type marker genes in
 PBMC CITE-seq data (Hao et al. 2021), evaluated against a **protein-derived
@@ -33,7 +26,7 @@ cell type, keeping the evaluation a genuine cross-modal test.
     * ➡️ [Pitch slides](https://docs.google.com/presentation/d/1NsWcmVj_nGgPXwznGEQuIt0szK6gWpAv6AhVMVyTu64)  
     * ➡️ [Project presentation slides](https://docs.google.com/presentation/d/1XC8spsQxBdkZpUi3c1FwNNoBYlBeGhgpELGiPLkxLGU)  
 
-## Reproduce
+## Run locally 
 
 ### 1. Download the data
 
@@ -65,22 +58,112 @@ curl -o GSE164378_sc.meta.data_3P.csv.gz https://ftp.ncbi.nlm.nih.gov/geo/series
 conda env create -f environment.yml
 conda activate data_science_in_life_sciences_project_2026_group_1
 
-# 1. Load the raw data and save a 25k-cell subsample to disk 
-# This should be run once. Subsequent runs load the data from disk.  
-python build_dataset.py
-python build_dataset.py true        # force recreation of the dataset
-
-# it is po
-
-# 2a. run the whole thing staged from the CLI ...
-python run_pipeline.py all          # prep, gt, mlp, bench, stats
-python run_pipeline.py plots        # all publication figures
-python run_pipeline.py stability    # bootstrap-over-cells CIs
-python run_pipeline.py seed         # MLP/IG seed variation
-
-# 2b. ... or open the documented notebook (exact same procedure, with narrative)
-jupyter lab notebooks/marker_benchmark.ipynb   # kernel: Python (data_science_in_life_sciences_project_2026_group_1)
+## TODO!
 ```
+
+## Run on cluster
+The point of running stuff on the cluster is to  
+(1) run intensive steps on the full data in parallel on powerful machines and   
+(2) not clog the local disk with many GB of intermediate files.  
+
+**Principally:**
+1. Initial Setup Steps
+    1. Clone git repo
+    2. Setup conda
+    3. Create datasets for later
+1. Run intensive work
+    1. Model training
+    2. Scoring
+1. Download the results for downstream analysis
+
+The work for the cluster is provided in scripts, not notebooks.   
+Analysis should be done somewhere else (locally, in a notebook). 
+   
+**Specifically:**
+
+```bash
+####
+# Setup steps
+#
+# This should all be done on the login node and not sent as a job to the computing nodes. 
+###
+# SSH to the cluster (Allegro)
+ssh -A <username>@allegro.imp.fu-berlin.de
+
+###
+# Clone git repo
+###
+$ mkdir workspace
+$ cd workspace
+$ git clone git@github.com:inbar/data_science_for_life_science_summer_2026_project_python.git
+
+###
+# Conda
+#
+# See: https://www.anaconda.com/docs/getting-started/miniconda/install/linux-install
+###
+
+## Install
+$ curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+$ bash ~/Miniconda3-latest-Linux-x86_64.sh
+
+## Create env
+$ cd data_science_for_life_science_summer_2026_project_python
+$ conda env create -f environment.yml
+
+## Activate
+$ conda activate data_science_in_life_sciences_project_2026_group_1
+
+###
+# Data
+###
+
+## still in ~/workspace/data_science_for_life_science_summer_2026_project_python
+$ source setup_environment.sh 
+
+## Download raw archives
+
+### GSE164378_RAW.tar
+curl -o GSE164378_RAW.tar https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164378/suppl/GSE164378_RAW.tar
+
+### GSE164378_sc.meta.data_3P.csv.gz
+curl -o GSE164378_sc.meta.data_3P.csv.gz https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164378/suppl/GSE164378_sc.meta.data_3P.csv.gz
+
+## Create and save MuData datasets
+## -> all data is saved in /data/scratch/${USER}/.data_science_project
+
+$ cd scripts
+### 1. Extract full dataset
+$ ./1_load_full_dataset.py
+
+### 2. Optionally: create subsample 
+$ ./2_create_subsample_datasets.py --subsample_size 10_000
+
+### 3. Create test/training split
+$ ./3_split_dataset.py --test_split_size 40 # i.e: test/training = 40%/60%, based on full dataset
+$ ./3_split_dataset.py --test_split_size 40 --subsample_size 10_000 # based on the 10_000 subsample
+
+### 4. Feature selection 
+### - Safely reduce genes, based on a specific split
+### - This saves a copy of the split data
+$ ./4_feature_selection.py --test_split_size 40
+```
+
+No that we have all the data ready and we can submit the interesting jobs to the computing nodes. 
+
+***Note:*** before we can run the MLP/IG scoring, we will have to train and save the model!
+
+```bash
+###
+# Train the MLP model
+###
+
+# TODO: submit a batch job to the cluster
+```
+
+
+
+---
 
 ## Key design decisions
 
