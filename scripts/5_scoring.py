@@ -5,13 +5,11 @@
 # In the project root
 
 import argparse
-import warnings
-
 import pandas as pd
+import warnings
 from anndata import ImplicitModificationWarning, AnnData
 from pandas.errors import PerformanceWarning
 from sklearn.preprocessing import StandardScaler
-
 from src import config
 from src import logs
 from src.deep_learning import gene_expression_mlp_model
@@ -22,9 +20,9 @@ from src.measures.scoring.linear.marginal import spearman_correlation
 from src.measures.scoring.non_linear.conditional import \
     mlp_with_integrated_gradient
 from src.measures.scoring.non_linear.marginal import mutual_information_ksg
+from src.persistence import scoring_results as scoring_results_persistence
 from src.persistence import splits as split_persistence
 from src.preprocessing import rna as rna_preprocessing
-from src.persistence import results as results_persistence
 
 warnings.simplefilter("ignore", category=PerformanceWarning)
 warnings.simplefilter("ignore", category=ImplicitModificationWarning)
@@ -173,9 +171,9 @@ def main(args):
 
     log.info("Done.")
 
-    results_persistence.save_results(
+    scoring_results_persistence.save_results(
         results=results,
-        method_name=method,
+        method=method,
         subsample_size=subsample_size,
         level=level,
         test_split_size=test_split_size,
