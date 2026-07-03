@@ -12,9 +12,19 @@ USER="$(whoami)"
 # standalone scripts
 export PYTHONPATH="${PWD}:${PYTHONPATH}"
 
-export PROJECT_HOME_ROOT="/data/scratch/${USER}"
+case "$HOSTNAME" in
+    *allegro*)
+        export PROJECT_HOME_ROOT="/data/scratch/${USER}"
+        ;;
+    *)
+        export PROJECT_HOME_ROOT="/Users/${USER}"
+        ;;
+esac
+
+
 
 # Log level
 # Options: DEBUG, INFO, WARN, CRITICAL
-export LOG_LEVEL=INFO
+export LOG_LEVEL=DEBUG
+
 

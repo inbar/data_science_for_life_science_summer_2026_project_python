@@ -26,10 +26,10 @@ import tarfile
 from pathlib import Path
 
 import anndata as ad
-import mudata
+import mudata as mu
 import pandas as pd
 import scipy.io
-from mudata import MuData
+from anndata import AnnData
 
 from src.persistence import subsampling
 from src import config
@@ -39,7 +39,7 @@ import logging
 log = logging.getLogger(__file__)
 
 # Avoid warning message
-mudata.set_options(pull_on_update=False)
+mu.set_options(pull_on_update=False)
 
 # File prefixes
 RNA_FILE_PREFIX = "GSM5008737_RNA"
@@ -59,8 +59,8 @@ ADT_BARCODES_FILE_NAME = "GSM5008738_ADT_3P-barcodes.tsv.gz"
 ADT_FEATURES_FILE_NAME = "GSM5008738_ADT_3P-features.tsv.gz"
 
 # File paths
-RAW_ARCHIVE_PATH = config.PROJECT_REPO_ROOT / RAW_ARCHIVE_FILE_NAME
-RAW_METADATA_PATH = config.PROJECT_REPO_ROOT / RAW_METADATA_FILE_NAME
+RAW_ARCHIVE_PATH = config.PROJECT_HOME / RAW_ARCHIVE_FILE_NAME
+RAW_METADATA_PATH = config.PROJECT_HOME / RAW_METADATA_FILE_NAME
 
 # Processed files
 # Dir Paths
@@ -130,6 +130,16 @@ def load_mtx_file(file_path):
     return matrix.T.tocsr()
 
 
+def create_mudata_dataset_from_anndata(rna_dataset: AnnData,
+                                       adt_dataset: AnnData)-> mu.MuData:
+    mdata = mu.MuData({
+        "rna": rna_dataset.copy(),
+        "adt": adt_dataset.copy()
+    })
+
+    return mdata
+
+
 def create_mudata_dataset(rna_matrix,
                           adt_matrix,
                           rna_features,
@@ -153,8 +163,10 @@ def create_mudata_dataset(rna_matrix,
     adt_annotated_data.var["protein_name"] = adt_annotated_data.var_names
     adt_annotated_data.var_names_make_unique()
 
-    dataset = mudata.MuData(
-        {"rna": rna_annotated_data, "adt": adt_annotated_data})
+    dataset = mu.MuData({
+        "rna": rna_annotated_data,
+        "adt": adt_annotated_data
+    })
     dataset.var_names_make_unique()
 
     return dataset
@@ -211,11 +223,11 @@ def dataset_exist(subsample_size=config.DEFAULT_SUBSAMPLE_SIZE,
 
 
 def read_h5mu_file(file_path: Path) -> MuData:
-    return mudata.read_h5mu(file_path)
+    return mu.read_h5mu(file_path)
 
 
 def load_or_create_full_dataset(raw_archive_path=RAW_ARCHIVE_PATH,
-                                force_recreate=False) -> MuData:
+                                force_recreate=False) -> mu.MuData:
     log.info("Load or create dataset full dataset from raw MatrixMarket files")
 
     # Check if raw files exist and request download if not
@@ -263,7 +275,7 @@ def load_or_create_full_dataset(raw_archive_path=RAW_ARCHIVE_PATH,
 def load_or_create_subsample(subsample_size=config.DEFAULT_SUBSAMPLE_SIZE,
                              level=config.DEFAULT_LEVEL,
                              seed=config.DEFAULT_SEED,
-                             force_recreate=False) -> MuData:
+                             force_recreate=False) -> mu.MuData:
     log.info(
         f"Load or create dataset: subsample size={subsample_size}, level={level}")
 

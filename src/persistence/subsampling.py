@@ -1,4 +1,5 @@
 import logging
+from typing import cast
 
 import numpy as np
 from mudata import MuData
@@ -59,10 +60,10 @@ def subsample_barcodes(rna_dataset,
 def subsample(dataset: MuData,
               level,
               subsample_size,
-              seed=config.DEFAULT_SEED):
+              seed=config.DEFAULT_SEED) -> MuData:
     barcodes_to_keep = subsample_barcodes(rna_dataset=dataset["rna"],
                                           level=level,
                                           subsample_size=subsample_size,
                                           seed=seed)
 
-    return dataset[barcodes_to_keep].copy()
+    return cast(MuData, dataset[barcodes_to_keep].copy())

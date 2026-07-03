@@ -1,0 +1,33 @@
+##########################################################
+# Mutagen config for syncing data to and from the cluster
+# See: https://mutagen.io/documentation/introduction/
+#
+# To sync, run:
+# $ mutagen project start
+##########################################################
+
+sync:
+  defaults:
+    mode: "one-way-replica"
+    ignore:
+      vcs: true
+      paths:
+        - ".DS_Store"
+        - ".git"
+        - "node_modules"
+
+  allegro:
+    alpha: "."
+    beta: "allegro.imp.fu-berlin.de:workspace/sync/data_science_for_life_science_summer_2026_project"
+
+  sync-back-results-from-allegro:
+    ignore:
+      paths:
+        - "data/"
+        - "**/figures/"
+        - "**/tables/"
+        - "*.tar"
+        - "*.gz"
+
+    alpha: "allegro.imp.fu-berlin.de:/data/scratch/inbad03/.data_science_project/persistence/results"
+    beta: "./synced/results"

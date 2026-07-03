@@ -32,19 +32,60 @@ def main(args):
     test_split_size = args.test_split_size
     seed = args.seed
 
+    log.info(f"Split subsample")
+    log.info("=================")
+    for k, v in vars(parsed_args).items():
+        log.info(f"   {k}: {v}")
+    log.info("")
+
     dataset = dataset_persistence.load_or_create_subsample(
         subsample_size=subsample_size,
         level=level)
 
-    training_data, test_data = splitting.split(dataset,
+    data_training, data_test = splitting.split(dataset,
                                                test_split_size=test_split_size / 100,
                                                seed=seed)
 
-    # Scaling both datasets and saving as a layer to be used in downstream computations
-    rna_preprocessing.scale_to_layer(training_data, test_data)
+    rna_dataset_training = data_training["rna"]
+    adt_dataset_training = data_training["adt"]
 
-    splits_persistence.save_split(training_data=training_data,
-                                  test_data=test_data,
+    rna_dataset_test = data_test["rna"]
+    adt_dataset_test = data_test["adt"]
+
+    # Scaling both rna datasets and saving as a layer to be used in downstream computations
+    rna_preprocessing.apply_scaling_to_split_data(rna_dataset_training,
+                                                  rna_dataset_test)
+
+    rna_dataset_filtered_training, rna_dataset_filtered_test = rna_preprocessing.apply_basic_filtering_to_split_data(
+        rna_dataset_training,
+        rna_dataset_test,
+        level)
+
+    remaining_cells_training = rna_dataset_filtered_training.obs_names
+
+    # Filter the cells in the adt modality accordingly
+    # Note: we only filter out cells in the training dataset because we don't
+    # care about uninteresting cells in training.
+    cells_to_keep_training = adt_dataset_training.obs_names.isin(
+        remaining_cells_training
+    )
+
+    adt_dataset_filtered_training = adt_dataset_training[
+        cells_to_keep_training, :
+    ]
+
+    filtered_dataset_training = dataset_persistence.create_mudata_dataset_from_anndata(
+        rna_dataset=rna_dataset_filtered_training,
+        adt_dataset=adt_dataset_filtered_training
+    )
+
+    filtered_dataset_test = dataset_persistence.create_mudata_dataset_from_anndata(
+        rna_dataset=rna_dataset_filtered_test,
+        adt_dataset=adt_dataset_test
+    )
+
+    splits_persistence.save_split(training_data=filtered_dataset_training,
+                                  test_data=filtered_dataset_test,
                                   test_split_size=test_split_size,
                                   seed=seed,
                                   subsample_size=subsample_size,

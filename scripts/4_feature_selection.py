@@ -31,6 +31,12 @@ def main(args):
     test_split_size = args.test_split_size
     seed = args.seed
 
+    log.info(f"Feature selection")
+    log.info("==================")
+    for k, v in vars(parsed_args).items():
+        log.info(f"   {k}: {v}")
+    log.info("")
+
     training_data, test_data = split_persistence.load_split_data(
         test_split_size=test_split_size,
         subsample_size=subsample_size,

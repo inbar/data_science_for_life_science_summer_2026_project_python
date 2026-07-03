@@ -29,6 +29,12 @@ def main(args):
     seed = args.seed
     force_recreate = args.force_recreate
 
+    log.info(f"Create Subsample")
+    log.info("==================")
+    for k, v in vars(parsed_args).items():
+        log.info(f"   {k}: {v}")
+    log.info("")
+
     dataset = dataset_persistence.load_or_create_subsample(
         subsample_size=subsample_size,
         level=level,

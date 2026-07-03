@@ -1,6 +1,9 @@
+from typing import cast
+
 import numpy as np
 import pandas as pd
 import scanpy as sc
+import mudata as mu
 from anndata import AnnData
 from sklearn.preprocessing import StandardScaler
 
@@ -32,9 +35,40 @@ def calculate_qc_metrics_in_place(dataset):
                                log1p=False)
 
 
-def scale_to_layer(training_data: AnnData,
-                   test_data: AnnData):
-    """ Scale the data and save in a layer. This is needed later on.
+def apply_basic_filtering(rna_dataset: AnnData,
+                          level: str,
+                          min_gene_per_cell=200,
+                          min_cells_per_gene=3,
+                          max_pct_mito=20.0) -> AnnData:
+    """Data is already filtered to begin with.
+    The filtering here is for extra caution.
+
+    Keep only cells (rows) that:
+    1. have more than min_gene_per_cell unique expressed genes (default: 200)
+    2. don't have too much mitochondrial genes (pct_counts_mito < max_pct_mito)
+    3. Don't have specific labels (e.g: Doublets)
+
+    Keep only genes that:
+    1. are expressed in more than min_cells_per_gene (default: 3)
+
+    """
+
+    sc.pp.filter_genes(rna_dataset, min_cells=min_cells_per_gene)
+    sc.pp.filter_cells(rna_dataset, min_genes=min_gene_per_cell)
+
+    # Filter out cells with high mitochondrial expression levels
+    rna_dataset = rna_dataset[
+        rna_dataset.obs['pct_counts_mt'] < max_pct_mito, :]
+
+    # Filter out cells with unwanted labels
+    rna_dataset = rna_dataset[~rna_dataset.obs[level].isin(LABLES_TO_DROP), :]
+
+    return rna_dataset.copy()
+
+
+def apply_scaling_to_split_data(training_rna_dataset: AnnData,
+                                test_rna_dataset: AnnData):
+    """Scale the data and save in a layer. This is needed later on.
 
         The scaling goes as follows:
             1. Find the parameters (mean, sd) of the training data (fit)
@@ -42,41 +76,68 @@ def scale_to_layer(training_data: AnnData,
             3. Transform the test data *based on the parameters from the training data
             and save in a layer (do not change the main matrix)
     """
-    training_data_rna = training_data["rna"]
-    test_data_rna = test_data["rna"]
 
     scaler = StandardScaler()
 
     # Fit, scale and save the training data
-    training_data_scaled = scaler.fit_transform(training_data_rna.to_df())
-    training_data_rna.layers[LAYER_NAME_SCALED] = training_data_scaled
+    training_data_scaled = scaler.fit_transform(training_rna_dataset.to_df())
+    training_rna_dataset.layers[LAYER_NAME_SCALED] = training_data_scaled
 
     # Scale and save the test data based on the parameters from the training
     # dataset.
-    test_data_scaled = scaler.transform(test_data_rna.to_df())
-    test_data_rna.layers[LAYER_NAME_SCALED] = test_data_scaled
+    test_data_scaled = scaler.transform(test_rna_dataset.to_df())
+    test_rna_dataset.layers[LAYER_NAME_SCALED] = test_data_scaled
 
 
-def apply_basic_filtering(dataset: AnnData,
-                          level: str,
-                          min_gene_count=200,
-                          max_pct_mito=20.0):
-    """Data is already filtered to begin with.
-    The filtering here is for extra caution.
+def apply_basic_filtering_to_split_data(training_rna_dataset_filtered: AnnData,
+                                        test_rna_dataset_filtered: AnnData,
+                                        level: str = config.DEFAULT_LEVEL,
+                                        min_gene_per_cell=200,
+                                        min_cells_per_gene=3,
+                                        max_pct_mito=20.0) -> tuple[
+    AnnData, AnnData]:
+    """Filtering split data
 
-    Keep only genes with:
-    1. n_genes_by_counts > min_genes
-    2. pct_counts_mito < max_pct_mito
-    3. Not in [labels to drop]
+    After spliting, we deal with subsets of the observations (the cells).
+    It might be that in the training dataset, some genes that were expressed in
+    the full dataset, are now only expressed in fewer cells than allowed.
+
+    Such genes don't contriute any valuable information to the analysis of that
+    specific split and may/should be filtered out to reduce computational load.
+
+    The same applies for cells per genes: some genes might not be expressed in
+    enough cells to pass the threshold.
+
+    In such filtering, we establish the list of genes to filter solely
+    based on the training set. We then subset the test dataset accordingly.
+
+    Keep only cells (rows) that:
+    1. have more than min_gene_per_cell unique expressed genes (default: 200)
+    2. don't have too much mitochondrial genes (pct_counts_mito < max_pct_mito)
+    3. Don't have specific labels (e.g: Doublets)
+
+    Keep only genes that:
+    1. are expressed in more than min_cells_per_gene (default: 3)
 
     """
 
-    sc.pp.filter_cells(dataset, min_counts=min_gene_count)
+    sc.pp.filter_genes(training_rna_dataset_filtered,
+                       min_cells=min_cells_per_gene)
+    sc.pp.filter_cells(training_rna_dataset_filtered,
+                       min_genes=min_gene_per_cell)
 
-    dataset = dataset[dataset.obs['pct_counts_mt'] < max_pct_mito, :]
-    dataset = dataset[~dataset.obs[level].isin(LABLES_TO_DROP), :]
+    training_rna_dataset_filtered = training_rna_dataset_filtered[
+        training_rna_dataset_filtered.obs['pct_counts_mt'] < max_pct_mito, :]
+    training_rna_dataset_filtered = training_rna_dataset_filtered[
+        ~training_rna_dataset_filtered.obs[level].isin(LABLES_TO_DROP), :]
 
-    return dataset.copy()
+    test_genes_to_keep = test_rna_dataset_filtered.var_names.isin(
+        training_rna_dataset_filtered.var_names)
+
+    test_rna_dataset_filtered = test_rna_dataset_filtered[:, test_genes_to_keep]
+
+    # We know that the datasets are AnnData objects
+    return training_rna_dataset_filtered.copy(), test_rna_dataset_filtered.copy()
 
 
 def annotate_highly_variable_genes(dataset: AnnData,
