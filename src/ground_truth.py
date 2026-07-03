@@ -4,8 +4,8 @@ import pandas as pd
 import scanpy as sc
 from anndata import AnnData
 
-import config
-from preprocessing.adt import LAYER_NAME_LOGARITHMIZED
+from src import config
+from src.preprocessing.adt import LAYER_NAME_LOGARITHMIZED
 from src.mappings import map_protein_to_genes
 
 

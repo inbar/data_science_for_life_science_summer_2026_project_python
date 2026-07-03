@@ -33,3 +33,7 @@ Thumbs.db
 
 # Intellij
 .idea/
+
+# Mutagen sync
+synced/
+remote_logs/

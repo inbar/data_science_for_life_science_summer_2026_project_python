@@ -23,11 +23,12 @@ dependencies:
   - tqdm
   - jupyterlab
   - ipykernel
+  - pyyaml
   - pip
+  - joblib
   - pip:
       - torch
       - mudata
       - captum
       - harmonypy==0.0.9
 
-  - joblib

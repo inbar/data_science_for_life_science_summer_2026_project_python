@@ -10,10 +10,6 @@ from src.persistence import path_tools
 log = logging.getLogger(__file__)
 
 ROOT_DIR = config.PERSISTENCE_DIR / "data_splits"
-SPLIT_DIR_NAME_TEMPLATE = "split_{test_split_size}/seed_{seed}"
-
-SUBSAMPLED_DATA_SUBDIR_TEMPLATE = "from_subsampled_dataset/{subsample_size}"
-FULL_DATASET_SUBDIR_NAME = "from_full_dataset"
 
 TRAINING_FILE_NAME = "training.h5mu"
 TEST_FILE_NAME = "test.h5mu"
