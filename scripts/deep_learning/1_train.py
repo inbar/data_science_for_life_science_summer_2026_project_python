@@ -22,8 +22,8 @@ warnings.simplefilter("ignore", category=ImplicitModificationWarning)
 
 import logging
 
-logs.setup_logging(__file__)
-log = logging.getLogger(__file__)
+log = None
+
 
 def main(args):
     subsample_size = args.subsample_size
@@ -31,6 +31,7 @@ def main(args):
     test_split_size = args.test_split_size
     seed = args.seed
     n_epochs = args.n_epochs
+    tag = args.tag
 
     log.info(f"Running Training")
     log.info("===================")
@@ -56,10 +57,11 @@ def main(args):
                                    level=level)
 
     model_persistence.save_trained_model_weights(trained_model,
-                                      test_split_size=test_split_size,
-                                      seed=seed,
-                                      subsample_size=subsample_size)
-
+                                                 test_split_size=test_split_size,
+                                                 seed=seed,
+                                                 subsample_size=subsample_size,
+                                                 level=level,
+                                                 tag=tag)
 
 
 if __name__ == "__main__":
@@ -72,6 +74,9 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=config.DEFAULT_SEED)
     parser.add_argument("--n_epochs", type=int,
                         default=config.DEFAULT_N_EPOCHS)
+    parser.add_argument("--tag", type=str, default=config.DEFAULT_TAG)
     parsed_args = parser.parse_args()
+
+    logs.setup_logging(__file__)
 
     main(parsed_args)

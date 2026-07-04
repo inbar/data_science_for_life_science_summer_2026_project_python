@@ -15,11 +15,13 @@ def get_trained_model_file_path(
     test_split_size: int = config.DEFAULE_TEST_SPLIT_SIZE,
     seed: int = config.DEFAULT_SEED,
     subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
-    level: str = config.DEFAULT_LEVEL) -> Path:
+    level: str = config.DEFAULT_LEVEL,
+    tag: str = config.DEFAULT_TAG) -> Path:
     subfolders = path_tools.get_subfolder_path(subsample_size=subsample_size,
                                                level=level,
                                                test_split_size=test_split_size,
-                                               seed=seed)
+                                               seed=seed,
+                                               tag=tag)
 
     file_path = ROOT_DIR / subfolders / FILE_NAME
     file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -31,11 +33,13 @@ def save_trained_model_weights(model: nn.Module,
                                test_split_size: int = config.DEFAULE_TEST_SPLIT_SIZE,
                                seed: int = config.DEFAULT_SEED,
                                subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
-                               level: str = config.DEFAULT_LEVEL):
-    file_path = get_trained_model_file_path(test_split_size,
-                                            seed,
-                                            subsample_size,
-                                            level)
+                               level: str = config.DEFAULT_LEVEL,
+                               tag: str = config.DEFAULT_TAG):
+    file_path = get_trained_model_file_path(test_split_size=test_split_size,
+                                            seed=seed,
+                                            subsample_size=subsample_size,
+                                            level=level,
+                                            tag=tag)
     torch.save(model.state_dict(), file_path)
 
 
@@ -43,9 +47,11 @@ def load_trained_model_weights(
     test_split_size: int = config.DEFAULE_TEST_SPLIT_SIZE,
     seed: int = config.DEFAULT_SEED,
     subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
-    level: str = config.DEFAULT_LEVEL):
-    file_path = get_trained_model_file_path(test_split_size,
-                                            seed,
-                                            subsample_size,
-                                            level)
+    level: str = config.DEFAULT_LEVEL,
+    tag: str = config.DEFAULT_TAG):
+    file_path = get_trained_model_file_path(test_split_size=test_split_size,
+                                            seed=seed,
+                                            subsample_size=subsample_size,
+                                            level=level,
+                                            tag=tag)
     return torch.load(file_path)

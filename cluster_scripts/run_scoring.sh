@@ -14,20 +14,49 @@
 
 USER=$(whoami)
 
-SUBSAMPLE_SIZE=-1
-LEVEL="celltype.l2"
-TEST_SPLIT_SIZE=40
-SEED=42
-K_NEIGHBORS=3
+# Commands
+# Run:
+#   $ sbatch <params> run_scoring.sh <method>
+#
+# See all jobs:
+#  $  SLURM_TIME_FORMAT=relative sacct -u <user>  --format=jobid,start,end,elapsed,NCPUS,AllocCPUS,AveCPU,CPUTime,state
+#
+# See job status:
+#  $  scontrol show job <job_id>
 
-# Pass param like:
-# $ sbatch run_scoring.sh spearman
-# $ sbatch run_scoring.sh partial_corr
-# $ sbatch --cpus-per-task=8 --time=06:00:00 run_scoring.sh mi_ksg
-# $ sbatch run_scoring.sh ig_mlp
-METHOD=$1
 
-echo "Starting scoring task: $METHOD"
+# Pass params like:
+# $ sbatch run_scoring.sh --export=ALL,METHOD=<method>,LEVEL=<level>, etc
+# Example:
+# $ sbatch run_scoring.sh --export=ALL,METHOD=spearman
+# $ sbatch --cpus-per-task=8 --time=06:00:00 run_scoring.sh --export=ALL,METHOD=mi_ksg,K_NEIGHBORS=5,TAG=KNN_5
+#
+# The METHOD variable is required
+# All other variables are optional and have their default values defined above.
+#
+# Available methods:
+# spearman
+# partial_corr
+# mi_ksg
+# ig_mlp
+
+SUBSAMPLE_SIZE="${SUBSAMPLE_SIZE:=-1}"
+LEVEL="${LEVEL:="celltype.l2"}"
+TEST_SPLIT_SIZE="${TEST_SPLIT_SIZE:=40}"
+SEED="${SEED:=42}"
+K_NEIGHBORS="${K_NEIGHBORS:=3}"
+TAG="${TAG:=''}"
+
+echo "Starting scoring task"
+echo "====================="
+echo "  Params:"
+echo "    METHOD: ${METHOD}"
+echo "    SUBSAMPLE_SIZE: ${SUBSAMPLE_SIZE}"
+echo "    LEVEL: ${LEVEL}"
+echo "    TEST_SPLIT_SIZE: ${TEST_SPLIT_SIZE}"
+echo "    SEED: ${SEED}"
+echo "    K_NEIGHBORS: ${K_NEIGHBORS}"
+echo "    TAG: ${TAG}"
 
 
 source setup_environment.sh
@@ -38,4 +67,5 @@ srun ./5_scoring.py --subsample_size $SUBSAMPLE_SIZE \
                --test_split_size $TEST_SPLIT_SIZE \
                --seed $SEED \
                --k_neighbors $K_NEIGHBORS \
-               --method $METHOD
+               --method $METHOD \
+               --tag $TAG

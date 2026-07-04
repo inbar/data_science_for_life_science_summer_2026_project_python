@@ -31,6 +31,7 @@ def main(args):
     level = args.level
     test_split_size = args.test_split_size
     seed = args.seed
+    tag = args.tag
 
     log.info(f"Create Subsample")
     log.info("==================")
@@ -43,7 +44,8 @@ def main(args):
         test_split_size=test_split_size,
         subsample_size=subsample_size,
         seed=seed,
-        level=level
+        level=level,
+        tag=tag
     )
 
     test_data_adt = test_data.mod["adt"]
@@ -60,18 +62,20 @@ def main(args):
         test_split_size=test_split_size,
         subsample_size=subsample_size,
         seed=seed,
-        level=level
+        level=level,
+        tag=tag
     )
-
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--subsample_size", type=int, default=config.DEFAULT_SUBSAMPLE_SIZE)
+    parser.add_argument("--subsample_size", type=int,
+                        default=config.DEFAULT_SUBSAMPLE_SIZE)
     parser.add_argument("--level", type=str, default=config.DEFAULT_LEVEL)
     parser.add_argument("--test_split_size", type=int,
                         default=config.DEFAULE_TEST_SPLIT_SIZE)
     parser.add_argument("--seed", type=int, default=config.DEFAULT_SEED)
+    parser.add_argument("--tag", type=str, default=config.DEFAULT_TAG)
     parsed_args = parser.parse_args()
 
     main(parsed_args)

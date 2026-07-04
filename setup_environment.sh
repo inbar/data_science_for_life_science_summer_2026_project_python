@@ -29,3 +29,5 @@ export LOG_LEVEL=DEBUG
 source /home/$USER/miniconda3/etc/profile.d/conda.sh
 conda activate /home/inbad03/miniconda3/envs/data_science_in_life_sciences_project_2026_group_1
 
+# Slurm
+export SLURM_TIME_FORMAT=relative

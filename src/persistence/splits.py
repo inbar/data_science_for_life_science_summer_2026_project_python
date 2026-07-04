@@ -22,11 +22,13 @@ def get_base_path(split_name: str = DEFAULT_SPLIT_NAME,
                   subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
                   level: str = config.DEFAULT_LEVEL,
                   test_split_size: int = config.DEFAULE_TEST_SPLIT_SIZE,
-                  seed: int = config.DEFAULT_SEED) -> Path:
+                  seed: int = config.DEFAULT_SEED,
+                  tag: str = config.DEFAULT_TAG) -> Path:
     subfolders = path_tools.get_subfolder_path(subsample_size=subsample_size,
                                                level=level,
                                                test_split_size=test_split_size,
-                                               seed=seed)
+                                               seed=seed,
+                                               tag=tag)
 
     return ROOT_DIR / subfolders / split_name
 
@@ -35,12 +37,14 @@ def get_training_file_path(split_name: str = DEFAULT_SPLIT_NAME,
                            subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
                            level: str = config.DEFAULT_LEVEL,
                            test_split_size: int = config.DEFAULE_TEST_SPLIT_SIZE,
-                           seed: int = config.DEFAULT_SEED) -> Path:
+                           seed: int = config.DEFAULT_SEED,
+                           tag: str = config.DEFAULT_TAG) -> Path:
     base_path = get_base_path(split_name=split_name,
                               subsample_size=subsample_size,
                               level=level,
                               test_split_size=test_split_size,
-                              seed=seed)
+                              seed=seed,
+                              tag=tag)
 
     return base_path / TRAINING_FILE_NAME
 
@@ -49,12 +53,14 @@ def get_test_file_path(split_name: str = DEFAULT_SPLIT_NAME,
                        subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
                        level: str = config.DEFAULT_LEVEL,
                        test_split_size: int = config.DEFAULE_TEST_SPLIT_SIZE,
-                       seed: int = config.DEFAULT_SEED) -> Path:
+                       seed: int = config.DEFAULT_SEED,
+                       tag: str = config.DEFAULT_TAG) -> Path:
     base_path = get_base_path(split_name=split_name,
                               subsample_size=subsample_size,
                               level=level,
                               test_split_size=test_split_size,
-                              seed=seed)
+                              seed=seed,
+                              tag=tag)
 
     return base_path / TEST_FILE_NAME
 
@@ -65,7 +71,8 @@ def save_split(training_data: MuData,
                test_split_size: int = config.DEFAULE_TEST_SPLIT_SIZE,
                seed: int = config.DEFAULT_SEED,
                subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
-               level: str = config.DEFAULT_LEVEL):
+               level: str = config.DEFAULT_LEVEL,
+               tag: str = config.DEFAULT_TAG):
     training_split_size_pct = 100 - test_split_size
 
     log.info(f"Persist data split to disk:")
@@ -80,13 +87,15 @@ def save_split(training_data: MuData,
                                            subsample_size=subsample_size,
                                            level=level,
                                            test_split_size=test_split_size,
-                                           seed=seed)
+                                           seed=seed,
+                                           tag=tag)
 
     test_file = get_test_file_path(split_name=split_name,
                                    subsample_size=subsample_size,
                                    level=level,
                                    test_split_size=test_split_size,
-                                   seed=seed)
+                                   seed=seed,
+                                   tag=tag)
 
     log.info(f"Training data file: {training_file}")
     datasets.save_mudata_dataset_to_disk(training_data, training_file)
@@ -99,12 +108,14 @@ def load_training_data(split_name: str = DEFAULT_SPLIT_NAME,
                        test_split_size: int = config.DEFAULE_TEST_SPLIT_SIZE,
                        seed: int = config.DEFAULT_SEED,
                        subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
-                       level: str = config.DEFAULT_LEVEL) -> MuData:
+                       level: str = config.DEFAULT_LEVEL,
+                       tag: str = config.DEFAULT_TAG) -> MuData:
     training_file = get_training_file_path(split_name=split_name,
                                            subsample_size=subsample_size,
                                            level=level,
                                            test_split_size=test_split_size,
-                                           seed=seed)
+                                           seed=seed,
+                                           tag=tag)
 
     if not training_file.exists():
         log.error(
@@ -119,12 +130,14 @@ def load_test_data(split_name: str = DEFAULT_SPLIT_NAME,
                    test_split_size: int = config.DEFAULE_TEST_SPLIT_SIZE,
                    seed: int = config.DEFAULT_SEED,
                    subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
-                   level: str = config.DEFAULT_LEVEL) -> MuData:
+                   level: str = config.DEFAULT_LEVEL,
+                   tag: str = config.DEFAULT_TAG) -> MuData:
     test_file = get_test_file_path(split_name=split_name,
                                    subsample_size=subsample_size,
                                    level=level,
                                    test_split_size=test_split_size,
-                                   seed=seed)
+                                   seed=seed,
+                                   tag=tag)
 
     if not test_file.exists():
         log.error(
@@ -139,16 +152,19 @@ def load_split_data(split_name: str = DEFAULT_SPLIT_NAME,
                     test_split_size: int = config.DEFAULE_TEST_SPLIT_SIZE,
                     seed: int = config.DEFAULT_SEED,
                     subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
-                    level: str = config.DEFAULT_LEVEL) -> tuple[MuData, MuData]:
+                    level: str = config.DEFAULT_LEVEL,
+                    tag: str = config.DEFAULT_TAG) -> tuple[MuData, MuData]:
     return (
-        load_training_data(split_name,
-                           test_split_size,
-                           seed,
-                           subsample_size,
-                           level),
-        load_test_data(split_name,
-                       test_split_size,
-                       seed,
-                       subsample_size,
-                       level)
+        load_training_data(split_name=split_name,
+                           test_split_size=test_split_size,
+                           seed=seed,
+                           subsample_size=subsample_size,
+                           level=level,
+                           tag=tag),
+        load_test_data(split_name=split_name,
+                       test_split_size=test_split_size,
+                       seed=seed,
+                       subsample_size=subsample_size,
+                       level=level,
+                       tag=tag)
     )

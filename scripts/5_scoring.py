@@ -107,6 +107,7 @@ def main(args):
     seed = args.seed
     method = args.method
     k_neighbors = args.k_neighbors
+    tag = args.tag
 
     log.info(f"Running Scoring")
     log.info("==========================")
@@ -177,7 +178,8 @@ def main(args):
         subsample_size=subsample_size,
         level=level,
         test_split_size=test_split_size,
-        seed=seed
+        seed=seed,
+        tag=tag
     )
 
 
@@ -194,6 +196,7 @@ if __name__ == "__main__":
     parser.add_argument("--k_neighbors", type=int,
                         default=config.DEFAULT_K_NEIGHBORS,
                         help="Only relevant for Mutual Information. Ignored otherwise.")
+    parser.add_argument("--tag", type=str, default=config.DEFAULT_TAG)
     parsed_args = parser.parse_args()
 
     main(parsed_args)
