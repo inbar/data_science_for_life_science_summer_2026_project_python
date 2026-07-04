@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import torch
@@ -9,6 +10,8 @@ from src import config
 FILE_NAME = "trained_model_weights.pt"
 
 ROOT_DIR = config.PERSISTENCE_DIR / "trained_models"
+
+log = logging.getLogger(__file__)
 
 
 def get_trained_model_file_path(
@@ -40,6 +43,8 @@ def save_trained_model_weights(model: nn.Module,
                                             subsample_size=subsample_size,
                                             level=level,
                                             tag=tag)
+
+    log.info(f"Saving trained model weights to file: {file_path}")
     torch.save(model.state_dict(), file_path)
 
 

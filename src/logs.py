@@ -11,13 +11,12 @@ log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
 log_level = getattr(logging, log_level, logging.INFO)
 
 
-def setup_logging(calling_file: str, tag=config.DEFAULT_TAG):
+def setup_logging(calling_file: str):
     script_name = Path(calling_file).stem
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     hostname = socket.gethostname()
 
-    tag_suffix = "" if tag is config.DEFAULT_TAG else f"_{tag}"
-    log_filename = f"{script_name}{tag_suffix}_{timestamp}_{hostname}.log"
+    log_filename = f"{script_name}_{timestamp}_{hostname}.log"
 
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)

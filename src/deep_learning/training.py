@@ -12,42 +12,44 @@ import logging
 log = logging.getLogger(__file__)
 
 
-def get_hyperparameters(model: nn.Module):
-    criterion = nn.BCEWithLogitsLoss()
-    optimizer = optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
+def get_hyperparameters(model: nn.Module,
+                        learning_rate: float = 1e-3,
+                        weight_decay: float = 1e-4):
+    loss_criterion = nn.BCEWithLogitsLoss()
+    optimizer = optim.AdamW(model.parameters(),
+                            lr=learning_rate,
+                            weight_decay=weight_decay)
 
     return (
-        criterion,
+        loss_criterion,
         optimizer
     )
 
 
-def train(training_data: AnnData,
+def train(model: GeneExpressionModel,
+          training_data: AnnData,
           labeling_df: pd.DataFrame,
           n_epochs=15,
-          level: str = config.DEFAULT_LEVEL) -> GeneExpressionModel:
+          learning_rate: float = 1e-3,
+          weight_decay: float = 1e-4,
+          batch_size: int = 64) -> GeneExpressionModel:
     device = pytorch_device.get_device()
-
-    n_genes = training_data.n_vars
-    n_cell_types = training_data.obs[level].nunique()
-
-    log.info("Creating GeneExpressionModel")
-    log.info("-----------------------------")
-    log.info(f"   input_dim={n_genes} (n_genes)")
-    log.info(f"   output_dim={n_cell_types} (n_cell_types)")
-    log.info("")
-    model = GeneExpressionModel(n_genes, n_cell_types)
+    model.to(device)
 
     log.info("Extracting the scaled data from the dataset...")
     training_dataset_scaled = training_data.to_df(layer=LAYER_NAME_SCALED)
 
     log.info("Fetching hyperparameters...")
-    criterion, optimizer = get_hyperparameters(model)
+    loss_criterion, optimizer = get_hyperparameters(model,
+                                                    learning_rate,
+                                                    weight_decay)
 
     log.info("Creating dataset loader...")
-    training_dataset, training_dataset_loader = data_conversion.to_dataset_loader(
+    training_dataset_tensor, training_dataset_loader = data_conversion.to_dataset_loader(
         training_dataset_scaled,
-        labeling_df)
+        labeling_df,
+        batch_size=batch_size
+    )
 
     log.info("Starting MLP training loop...")
     log.info("-" * 40)
@@ -67,7 +69,7 @@ def train(training_data: AnnData,
             predictions = model(training_batch_x)
 
             # 3. Calculate error
-            loss = criterion(predictions, training_batch_y)
+            loss = loss_criterion(predictions, training_batch_y)
 
             # 4. Calculate adjustments
             loss.backward()
@@ -78,11 +80,11 @@ def train(training_data: AnnData,
             running_loss += loss.item() * training_batch_x.size(0)
 
         # Calculate average loss for this epoch
-        epoch_loss = running_loss / len(training_dataset)
+        epoch_loss = running_loss / len(training_dataset_tensor)
         log.info(
             f"Epoch {epoch + 1}/{n_epochs} | Train Loss: {epoch_loss:.4f}")
 
     log.info("-" * 40)
-    log.info("Training fit complete.")
+    log.info("Training complete.")
 
     return model

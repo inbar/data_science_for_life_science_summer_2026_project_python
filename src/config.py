@@ -60,6 +60,9 @@ DEFAULT_GROUND_TRUTH_LOG2FC_MIN = 0.0
 
 DEFAULT_TAG = ""
 
+# Hyperparameter tuning
+N_TRIALS=50
+
 # Method labels
 
 METHOD_SPEARMAN = "spearman"

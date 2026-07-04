@@ -25,6 +25,7 @@ import logging
 logs.setup_logging(__file__)
 log = logging.getLogger(__file__)
 
+
 def main(args):
     subsample_size = args.subsample_size
     level = args.level
@@ -105,7 +106,8 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--subsample_size", type=int, default=config.DEFAULT_SUBSAMPLE_SIZE)
+    parser.add_argument("--subsample_size", type=int,
+                        default=config.DEFAULT_SUBSAMPLE_SIZE)
     parser.add_argument("--level", type=str, default=config.DEFAULT_LEVEL)
     parser.add_argument("--test_split_size", type=int,
                         default=config.DEFAULE_TEST_SPLIT_SIZE)

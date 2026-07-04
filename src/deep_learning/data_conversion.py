@@ -12,10 +12,10 @@ def to_dataset_loader(dataset: pd.DataFrame,
     X_tensor = torch.tensor(X, dtype=torch.float32)
     Y_tensor = torch.tensor(Y, dtype=torch.float32)
 
-    dataset = TensorDataset(X_tensor, Y_tensor)
-    dataset_loader = DataLoader(dataset,
+    dataset_tensor = TensorDataset(X_tensor, Y_tensor)
+    dataset_loader = DataLoader(dataset_tensor,
                                 batch_size=batch_size,
                                 shuffle=True,
                                 drop_last=True)
 
-    return dataset, dataset_loader
+    return dataset_tensor, dataset_loader

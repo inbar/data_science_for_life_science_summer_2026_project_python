@@ -58,8 +58,8 @@ def subsample_barcodes(rna_dataset,
 
 
 def subsample(dataset: MuData,
-              level,
-              subsample_size,
+              level: str = config.DEFAULT_LEVEL,
+              subsample_size = config.DEFAULT_SUBSAMPLE_SIZE,
               seed=config.DEFAULT_SEED) -> MuData:
     barcodes_to_keep = subsample_barcodes(rna_dataset=dataset["rna"],
                                           level=level,

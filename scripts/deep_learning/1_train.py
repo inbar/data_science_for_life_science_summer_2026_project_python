@@ -10,11 +10,13 @@ import warnings
 from anndata import ImplicitModificationWarning
 from pandas.errors import PerformanceWarning
 
-from src.deep_learning import training
+from src.deep_learning.gene_expression_mlp_model import GeneExpressionModel
 from src import config
 from src import logs
-from src.persistence import splits as split_persistence
+from src.deep_learning import training
+from src.persistence import hyperparameters as hyperparam_persistence
 from src.persistence import models as model_persistence
+from src.persistence import splits as split_persistence
 from src.preprocessing import rna as rna_preprocessing
 
 warnings.simplefilter("ignore", category=PerformanceWarning)
@@ -22,7 +24,8 @@ warnings.simplefilter("ignore", category=ImplicitModificationWarning)
 
 import logging
 
-log = None
+logs.setup_logging(__file__)
+log = logging.getLogger(__file__)
 
 
 def main(args):
@@ -51,10 +54,27 @@ def main(args):
     training_data_rna = training_data["rna"]
     target_df = rna_preprocessing.build_target_df(training_data_rna, level)
 
-    trained_model = training.train(training_data_rna,
-                                   target_df,
+    log.info("Loading hyperparameter values from file...")
+    hyperparams = hyperparam_persistence.load_best_params(
+        root_dir=config.LOCAL_DATA_ROOT)
+
+    n_genes = training_data.n_vars
+    n_celltypes = training_data_rna.obs[level].nunique()
+
+    log.info("Creating new model instance...")
+    model = GeneExpressionModel(
+        input_dim=n_genes,
+        output_dim=n_celltypes,
+        dropout_rate=hyperparams["input_dropout_rate"]
+    )
+
+    trained_model = training.train(model=model,
+                                   training_data=training_data_rna,
+                                   labeling_df=target_df,
                                    n_epochs=n_epochs,
-                                   level=level)
+                                   learning_rate=hyperparams["learning_rate"],
+                                   weight_decay=hyperparams["weight_decay"],
+                                   batch_size=hyperparams["batch_size"])
 
     model_persistence.save_trained_model_weights(trained_model,
                                                  test_split_size=test_split_size,
@@ -76,7 +96,5 @@ if __name__ == "__main__":
                         default=config.DEFAULT_N_EPOCHS)
     parser.add_argument("--tag", type=str, default=config.DEFAULT_TAG)
     parsed_args = parser.parse_args()
-
-    logs.setup_logging(__file__)
 
     main(parsed_args)

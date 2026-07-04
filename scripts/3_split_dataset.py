@@ -44,8 +44,8 @@ def main(args):
         level=level)
 
     data_training, data_test = splitting.split(dataset,
-                                               test_split_size=test_split_size / 100,
-                                               seed=seed,)
+                                               test_split_size=test_split_size,
+                                               seed=seed, )
 
     rna_dataset_training = data_training["rna"]
     adt_dataset_training = data_training["adt"]
