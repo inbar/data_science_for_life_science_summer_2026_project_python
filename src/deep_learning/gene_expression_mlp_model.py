@@ -42,9 +42,14 @@ def load_trained_model(n_genes: int,
                        n_cells: int,
                        test_split_size: int,
                        seed: int,
-                       subsample_size: int) -> GeneExpressionModel:
-    state_dict = load_trained_model_weights(test_split_size, seed,
-                                            subsample_size)
+                       subsample_size: int,
+                       level: str,
+                       tag: str) -> GeneExpressionModel:
+    state_dict = load_trained_model_weights(test_split_size=test_split_size,
+                                            seed=seed,
+                                            subsample_size=subsample_size,
+                                            level=level,
+                                            tag=tag)
 
     model = GeneExpressionModel(n_genes, n_cells)
 

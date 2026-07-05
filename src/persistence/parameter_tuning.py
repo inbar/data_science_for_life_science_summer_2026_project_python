@@ -13,7 +13,7 @@ log = logging.getLogger(__file__)
 
 
 def get_file_path(root_dir: Path = ROOT_DIR) -> Path:
-    file_path = root_dir / "hyperparameters" / FILE_NAME
+    file_path = root_dir / "parameter_tuning" / FILE_NAME
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
     return file_path

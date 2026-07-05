@@ -53,10 +53,6 @@ def main(args):
     rna_dataset_test = data_test["rna"]
     adt_dataset_test = data_test["adt"]
 
-    # Scaling both rna datasets and saving as a layer to be used in downstream computations
-    rna_preprocessing.apply_scaling_to_split_data(rna_dataset_training,
-                                                  rna_dataset_test)
-
     rna_dataset_filtered_training, rna_dataset_filtered_test = rna_preprocessing.apply_basic_filtering_to_split_data(
         rna_dataset_training,
         rna_dataset_test,

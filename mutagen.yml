@@ -33,6 +33,10 @@ sync:
     alpha: "allegro.imp.fu-berlin.de:/data/scratch/inbad03/.data_science_project/persistence/ground_truth"
     beta: "./synced/ground_truth"
 
+  fetch-parameter-tuning-from-allegro:
+    alpha: "allegro.imp.fu-berlin.de:/data/scratch/inbad03/.data_science_project/persistence/parameter_tuning"
+    beta: "./synced/parameter_tuning"
+
   fetch-logs-from-allegro:
     alpha: "allegro.imp.fu-berlin.de:/data/scratch/inbad03/.data_science_project/logs"
     beta: "./remote_logs"

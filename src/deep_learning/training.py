@@ -12,20 +12,6 @@ import logging
 log = logging.getLogger(__file__)
 
 
-def get_hyperparameters(model: nn.Module,
-                        learning_rate: float = 1e-3,
-                        weight_decay: float = 1e-4):
-    loss_criterion = nn.BCEWithLogitsLoss()
-    optimizer = optim.AdamW(model.parameters(),
-                            lr=learning_rate,
-                            weight_decay=weight_decay)
-
-    return (
-        loss_criterion,
-        optimizer
-    )
-
-
 def train(model: GeneExpressionModel,
           training_data: AnnData,
           labeling_df: pd.DataFrame,
@@ -39,10 +25,11 @@ def train(model: GeneExpressionModel,
     log.info("Extracting the scaled data from the dataset...")
     training_dataset_scaled = training_data.to_df(layer=LAYER_NAME_SCALED)
 
-    log.info("Fetching hyperparameters...")
-    loss_criterion, optimizer = get_hyperparameters(model,
-                                                    learning_rate,
-                                                    weight_decay)
+    log.info("Creating loss criterion and optimizer...")
+    loss_criterion = nn.BCEWithLogitsLoss()
+    optimizer = optim.AdamW(model.parameters(),
+                            lr=learning_rate,
+                            weight_decay=weight_decay)
 
     log.info("Creating dataset loader...")
     training_dataset_tensor, training_dataset_loader = data_conversion.to_dataset_loader(

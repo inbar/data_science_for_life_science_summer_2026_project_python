@@ -14,7 +14,7 @@ from src.persistence import splits as split_persistence
 from src.persistence import subsampling
 from src.preprocessing import rna as rna_preprocessing
 from src.preprocessing import splitting
-from src.persistence import hyperparameters
+from src.persistence import parameter_tuning
 
 logs.setup_logging(__file__)
 log = logging.getLogger(__file__)
@@ -75,7 +75,7 @@ def main(args):
         n_trials=n_trials
     )
 
-    hyperparameters.save_best_params(study.best_params)
+    parameter_tuning.save_best_params(study.best_params)
 
 
 if __name__ == "__main__":

@@ -5,11 +5,12 @@
 # In the project root
 
 import argparse
-import pandas as pd
 import warnings
+
+import pandas as pd
 from anndata import ImplicitModificationWarning, AnnData
 from pandas.errors import PerformanceWarning
-from sklearn.preprocessing import StandardScaler
+
 from src import config
 from src import logs
 from src.deep_learning import gene_expression_mlp_model
@@ -42,13 +43,12 @@ def run_spearman(rna_data: AnnData,
                                                  labeling_df)
 
 
-def run_partial_correlation(rna_data: AnnData,
-                            labeling_df: pd.DataFrame,
-                            fitted_scaler: StandardScaler) -> pd.DataFrame:
+def run_partial_correlation(test_rna_data: AnnData,
+                            labeling_df: pd.DataFrame) -> pd.DataFrame:
     scaled_expression_levels_df = pd.DataFrame(
-        data=fitted_scaler.transform(rna_data.to_df()),
-        index=rna_data.obs_names,
-        columns=rna_data.var["gene_name"])
+        data=test_rna_data.to_df(rna_preprocessing.LAYER_NAME_SCALED),
+        index=test_rna_data.obs_names,
+        columns=test_rna_data.var["gene_name"])
 
     return ledoit_wolf_partial_correlation.calculate_scores(
         expression_levels_df=scaled_expression_levels_df,
@@ -56,12 +56,12 @@ def run_partial_correlation(rna_data: AnnData,
     )
 
 
-def run_mutual_information(rna_data: AnnData,
+def run_mutual_information(test_rna_data: AnnData,
                            labeling_df: pd.DataFrame,
                            k_neighbors: int,
                            seed: int) -> pd.DataFrame:
-    expression_levels_df = rna_data.to_df().copy()
-    expression_levels_df.columns = rna_data.var["gene_name"]
+    expression_levels_df = test_rna_data.to_df().copy()
+    expression_levels_df.columns = test_rna_data.var["gene_name"]
 
     return mutual_information_ksg.calculate_scores(expression_levels_df,
                                                    labeling_df,
@@ -70,13 +70,12 @@ def run_mutual_information(rna_data: AnnData,
 
 
 def run_mlp_ig(trained_model: GeneExpressionModel,
-               rna_data: AnnData,
-               labeling_df: pd.DataFrame,
-               fitted_scaler: StandardScaler) -> pd.DataFrame:
+               test_rna_data: AnnData,
+               labeling_df: pd.DataFrame) -> pd.DataFrame:
     scaled_expression_levels_df = pd.DataFrame(
-        data=fitted_scaler.transform(rna_data.to_df()),
-        index=rna_data.obs_names,
-        columns=rna_data.var["gene_name"])
+        data=test_rna_data.to_df(rna_preprocessing.LAYER_NAME_SCALED),
+        index=test_rna_data.obs_names,
+        columns=test_rna_data.var["gene_name"])
 
     return mlp_with_integrated_gradient.calculate_scores(trained_model,
                                                          expression_levels_df=scaled_expression_levels_df,
@@ -87,7 +86,8 @@ def get_trained_model(training_data: AnnData,
                       test_split_size: int,
                       seed: int,
                       subsample_size: int,
-                      level: str):
+                      level: str,
+                      tag: str):
     n_genes = training_data.n_vars
     n_cell_types = training_data.obs[level].nunique()
 
@@ -96,7 +96,9 @@ def get_trained_model(training_data: AnnData,
         n_cells=n_cell_types,
         test_split_size=test_split_size,
         seed=seed,
-        subsample_size=subsample_size
+        subsample_size=subsample_size,
+        level=level,
+        tag=tag
     )
 
 
@@ -141,16 +143,16 @@ def main(args):
     log.info(f"  n_genes (cols): {test_data_rna.n_vars}")
     log.info("")
 
-    scaler = StandardScaler()
-    scaler.fit(training_data["rna"].to_df())
+    # Scaling both rna datasets and saving as a layer to be used in downstream computations
+    rna_preprocessing.apply_scaling_to_split_data(training_data_rna,
+                                                  test_data_rna)
 
     match method:
         case m if m == config.METHOD_SPEARMAN:
             results = run_spearman(test_data_rna, target_df)
         case m if m == config.METHOD_PARTIAL_CORRELATION:
             results = run_partial_correlation(test_data_rna,
-                                              target_df,
-                                              scaler)
+                                              target_df)
         case m if m == config.METHOD_MI_KSG:
             results = run_mutual_information(test_data_rna,
                                              target_df,
@@ -165,8 +167,7 @@ def main(args):
 
             results = run_mlp_ig(trained_model,
                                  test_data_rna,
-                                 target_df,
-                                 scaler)
+                                 target_df)
         case _:
             raise ValueError(f"No such method: {method}")
 

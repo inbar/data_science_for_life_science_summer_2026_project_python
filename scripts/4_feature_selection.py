@@ -48,9 +48,8 @@ def main(args):
     training_data_rna = training_data["rna"]
     training_data_adt = training_data["adt"]
 
-    '''
-    Feature selection (reduce genes)
-    '''
+    # Feature selection (reduce genes)
+
     # Find highly variable genes
     # This must be done only on the training data to prevent data leakage!
     rna_preprocessing.annotate_highly_variable_genes(training_data_rna)
@@ -76,9 +75,7 @@ def main(args):
     # From the intersection, take only the high value genes
     genes_of_interest = expressed_marker_genes_for_proteins.union(hv_genes)
 
-    '''
-    Filtering the data
-    '''
+    # Filtering the data
     genes_of_interest_mask = training_data_rna.var["gene_name"].isin(
         sorted(genes_of_interest))
 

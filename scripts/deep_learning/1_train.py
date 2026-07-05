@@ -14,7 +14,7 @@ from src.deep_learning.gene_expression_mlp_model import GeneExpressionModel
 from src import config
 from src import logs
 from src.deep_learning import training
-from src.persistence import hyperparameters as hyperparam_persistence
+from src.persistence import parameter_tuning as hyperparam_persistence
 from src.persistence import models as model_persistence
 from src.persistence import splits as split_persistence
 from src.preprocessing import rna as rna_preprocessing
@@ -58,14 +58,14 @@ def main(args):
     hyperparams = hyperparam_persistence.load_best_params(
         root_dir=config.LOCAL_DATA_ROOT)
 
-    n_genes = training_data.n_vars
+    n_genes = training_data_rna.n_vars
     n_celltypes = training_data_rna.obs[level].nunique()
 
     log.info("Creating new model instance...")
     model = GeneExpressionModel(
         input_dim=n_genes,
         output_dim=n_celltypes,
-        dropout_rate=hyperparams["input_dropout_rate"]
+        dropout_rate=hyperparams["input_dropout"]
     )
 
     trained_model = training.train(model=model,
