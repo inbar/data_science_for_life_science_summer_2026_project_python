@@ -27,6 +27,7 @@ dependencies:
   - pip
   - joblib
   - optuna
+  - requests
   - pip:
       - torch
       - mudata

@@ -11,6 +11,7 @@ from anndata import ImplicitModificationWarning
 from pandas.errors import PerformanceWarning
 
 from src import ground_truth
+from src import ground_truth_2
 from src import config
 from src import logs
 
@@ -65,6 +66,9 @@ def main(args):
         level=level,
         tag=tag
     )
+
+    # Doesn't work currently
+    # ground_truth_2.create_groundtruth(test_data_adt)
 
 
 if __name__ == "__main__":
