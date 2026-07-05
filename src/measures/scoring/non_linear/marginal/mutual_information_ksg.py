@@ -33,6 +33,11 @@ def calculate_scores(expression_levels_df: pd.DataFrame,
     KSG: A. Kraskov, H. Stogbauer and P. Grassberger, "Estimating mutual
            information". Phys. Rev. E 69, 2004.
 
+    Expectation from expression data:
+        - normalized (log1p)? yes
+        - Scaled? no
+        - Ranked? no
+
     Parameters
     ----------
     expression_levels_df : pd.DataFrame

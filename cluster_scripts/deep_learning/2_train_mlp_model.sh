@@ -15,8 +15,8 @@ source setup_environment.sh
 cd scripts/deep_learning
 
 ###
-# Run:
-# $ sbatch 101_train_mlp_model.sh --export=ALL,TAG=some_tag
+# Run with params:
+# $ PARAM1=value PARAM2=value sbatch 2_train_mlp_model.sh
 
 LEVEL="${LEVEL:="celltype.l2"}"
 TEST_SPLIT_SIZE="${TEST_SPLIT_SIZE:=40}"
@@ -24,7 +24,7 @@ SEED="${SEED:=42}"
 TAG="${TAG:=''}"
 N_EPOCHS="${N_EPOCHS:=15}"
 
-echo "Starting scoring task"
+echo "Starting training task"
 echo "====================="
 echo "  Params:"
 echo "    LEVEL: ${LEVEL}"
@@ -33,7 +33,7 @@ echo "    SEED: ${SEED}"
 echo "    N_EPOCHS: ${N_EPOCHS}"
 echo "    TAG: ${TAG}"
 
-srun ./1_train.py \
+srun ./2_train.py \
              --level $LEVEL \
              --test_split_size $TEST_SPLIT_SIZE \
              --seed $SEED \

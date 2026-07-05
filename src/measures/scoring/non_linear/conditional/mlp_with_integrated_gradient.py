@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import torch
 from captum.attr import IntegratedGradients
@@ -13,6 +14,35 @@ log = logging.getLogger(__file__)
 def calculate_scores(trained_model: GeneExpressionModel,
                      expression_levels_df: pd.DataFrame,
                      labeling_df: pd.DataFrame) -> pd.DataFrame:
+    """Computes importance scores for genes for each per cell type
+        using Integrated Gradients (IG) on a trained model.
+
+        For each cell type, the function isolates the relevant cells, computes
+        how much each gene's expression contributed to the model's true
+        prediction relative to a zero-expression baseline, and aggregates the
+        attributions.
+
+        Expectation from expression data:
+            - normalized (log1p)? yes
+            - Scaled? yes
+            - Ranked? no
+
+        Parameters
+        ----------
+        trained_model : GeneExpressionModel
+            The trained PyTorch neural network model.
+        expression_levels_df: A pandas DataFrame of shape (n_cells, n_genes)
+            containing the gene expression matrix.
+        labeling_df: A pandas DataFrame of shape (n_cells, n_cell_types)
+            containing the true cell-type labels.
+
+        Returns
+        -------
+        resutls: pd.DataFrame
+            A DataFrame of shape (n_genes, n_cell_types) containing the
+            mean integrated gradient attribution scores between each gene and cell type.
+        """
+
     log.info("Computing Non-Linear/Conditional scoring: Integrated Gradient over a trained MLP")
 
     device = get_device()
@@ -49,7 +79,12 @@ def calculate_scores(trained_model: GeneExpressionModel,
             internal_batch_size=X_subset.shape[0]
         )
 
-        mean_attributions = attributions.detach().cpu().numpy().mean(axis=0)
+        # Take the absolute value of the attributions.
+        # A negative attribution is an indicator the same way as
+        # a positive one.
+        raw_attributions = attributions.detach().cpu().numpy()
+        abs_attributions = np.abs(raw_attributions)
+        mean_attributions = abs_attributions.mean(axis=0)
         all_attributions[cell_type] = mean_attributions
 
     log.info("-" * 50)

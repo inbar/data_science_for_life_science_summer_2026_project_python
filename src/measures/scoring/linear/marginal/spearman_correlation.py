@@ -23,6 +23,13 @@ def calculate_scores(expression_levels_df: pd.DataFrame,
     for each cell. The labeling is on-hot encoded: columns are cell types,
     and values are 1 if the cell (row) belongs to that type, and 0 otherwise.
 
+    Expectation from expression data:
+        - normalized (log1p)? yes
+        - Scaled? no
+        - Ranked? no
+
+    Note: scipy.stats.spearmanrho ranks the data internally.
+
     Parameters
     ----------
         expression_levels_df: A pandas DataFrame of shape (n_cells, n_genes)

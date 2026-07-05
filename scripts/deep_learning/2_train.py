@@ -55,8 +55,7 @@ def main(args):
     target_df = rna_preprocessing.build_target_df(training_data_rna, level)
 
     log.info("Loading hyperparameter values from file...")
-    hyperparams = hyperparam_persistence.load_best_params(
-        root_dir=config.LOCAL_DATA_ROOT)
+    hyperparams = hyperparam_persistence.load_best_params()
 
     n_genes = training_data_rna.n_vars
     n_celltypes = training_data_rna.obs[level].nunique()
@@ -67,6 +66,8 @@ def main(args):
         output_dim=n_celltypes,
         dropout_rate=hyperparams["input_dropout"]
     )
+
+    rna_preprocessing.apply_scaling(training_data_rna)
 
     trained_model = training.train(model=model,
                                    training_data=training_data_rna,

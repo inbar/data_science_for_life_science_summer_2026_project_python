@@ -110,6 +110,7 @@ def main(args):
     method = args.method
     k_neighbors = args.k_neighbors
     tag = args.tag
+    model_tag = args.model_tag
 
     log.info(f"Running Scoring")
     log.info("==========================")
@@ -163,7 +164,10 @@ def main(args):
                                               test_split_size=test_split_size,
                                               seed=seed,
                                               subsample_size=subsample_size,
-                                              level=level)
+                                              level=level,
+                                              tag=model_tag)
+
+
 
             results = run_mlp_ig(trained_model,
                                  test_data_rna,
@@ -198,6 +202,7 @@ if __name__ == "__main__":
                         default=config.DEFAULT_K_NEIGHBORS,
                         help="Only relevant for Mutual Information. Ignored otherwise.")
     parser.add_argument("--tag", type=str, default=config.DEFAULT_TAG)
+    parser.add_argument("--model_tag", type=str, default=config.DEFAULT_TAG)
     parsed_args = parser.parse_args()
 
     main(parsed_args)

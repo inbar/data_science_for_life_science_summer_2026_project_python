@@ -14,6 +14,10 @@ def calculate_scores(expression_levels_df: pd.DataFrame,
 
     Computes the Ledoit-Wolf shrunk covariance between features and targets.
 
+    Expectation from expression data:
+        - normalized (log1p)? yes
+        - Scaled? yes
+        - Ranked? no
 
     Parameters
     ----------

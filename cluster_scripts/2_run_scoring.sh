@@ -6,7 +6,7 @@
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=4
 #SBATCH --ntasks=1
-#SBATCH --mem-per-cpu=8G
+#SBATCH --mem-per-cpu=4G
 #SBATCH --time=01:00:00
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=%u@zedat.fu-berlin.de
@@ -26,13 +26,13 @@ USER=$(whoami)
 
 
 # Pass params like:
-# $ sbatch run_scoring.sh --export=ALL,METHOD=<method>,LEVEL=<level>, etc
+# $ PARAM1=val sbatch run_scoring.sh
 # Example:
-# $ sbatch run_scoring.sh --export=ALL,METHOD=spearman
-# $ sbatch --cpus-per-task=8 --time=06:00:00 run_scoring.sh --export=ALL,METHOD=mi_ksg,K_NEIGHBORS=5,TAG=KNN_5
+# $ TEST_SPLIT_SIZE=40 sbatch run_scoring.sh spearman
+# $ sbatch --cpus-per-task=8 --time=06:00:00 run_scoring.sh mi_ksg
 #
 # The METHOD variable is required
-# All other variables are optional and have their default values defined above.
+# All other variables are optional and have their default values defined below.
 #
 # Available methods:
 # spearman
@@ -40,12 +40,25 @@ USER=$(whoami)
 # mi_ksg
 # ig_mlp
 
+
+# Cheatsheet:
+#
+# TEST_SPLIT_SIZE=40 sbatch 2_run_scoring.sh spearman
+# TEST_SPLIT_SIZE=40 sbatch 2_run_scoring.sh partial_corr
+# TEST_SPLIT_SIZE=40 sbatch --cpus-per-task=8 2_run_scoring.sh mi_ksg
+# TEST_SPLIT_SIZE=40 MODEL_TAG=tuned sbatch 2_run_scoring.sh ig_mlp
+
+
+METHOD=$1
+
 SUBSAMPLE_SIZE="${SUBSAMPLE_SIZE:=-1}"
 LEVEL="${LEVEL:="celltype.l2"}"
 TEST_SPLIT_SIZE="${TEST_SPLIT_SIZE:=40}"
 SEED="${SEED:=42}"
 K_NEIGHBORS="${K_NEIGHBORS:=3}"
 TAG="${TAG:=''}"
+MODEL_TAG="${MODEL_TAG:=''}"
+
 
 echo "Starting scoring task"
 echo "====================="
@@ -57,6 +70,7 @@ echo "    TEST_SPLIT_SIZE: ${TEST_SPLIT_SIZE}"
 echo "    SEED: ${SEED}"
 echo "    K_NEIGHBORS: ${K_NEIGHBORS}"
 echo "    TAG: ${TAG}"
+echo "    MODEL_TAG: ${MODEL_TAG}"
 
 
 source setup_environment.sh
@@ -68,4 +82,5 @@ srun ./5_scoring.py --subsample_size $SUBSAMPLE_SIZE \
                --seed $SEED \
                --k_neighbors $K_NEIGHBORS \
                --method $METHOD \
-               --tag $TAG
+               --tag $TAG \
+               --model_tag $MODEL_TAG

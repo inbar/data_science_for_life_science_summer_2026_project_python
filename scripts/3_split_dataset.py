@@ -7,6 +7,7 @@
 import argparse
 import warnings
 
+import numpy as np
 from anndata import ImplicitModificationWarning
 from pandas.errors import PerformanceWarning
 
@@ -39,9 +40,12 @@ def main(args):
         log.info(f"   {k}: {v}")
     log.info("")
 
-    dataset = dataset_persistence.load_or_create_subsample(
-        subsample_size=subsample_size,
-        level=level)
+    if subsample_size is config.DEFAULT_SUBSAMPLE_SIZE:
+        dataset = dataset_persistence.load_or_create_full_dataset(level=level)
+    else:
+        dataset = dataset_persistence.load_or_create_subsample(
+            subsample_size=subsample_size,
+            level=level)
 
     data_training, data_test = splitting.split(dataset,
                                                test_split_size=test_split_size,
@@ -59,6 +63,8 @@ def main(args):
         rna_dataset_test,
         level)
 
+    log.info(np.unique(rna_dataset_filtered_training.obs[level]))
+    log.info(np.unique(rna_dataset_filtered_test.obs[level]))
     remaining_cells_training = rna_dataset_filtered_training.obs_names
 
     # Filter the cells in the adt modality accordingly

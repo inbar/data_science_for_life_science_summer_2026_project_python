@@ -27,7 +27,7 @@ echo "    TEST_SPLIT_SIZE: ${TEST_SPLIT_SIZE}"
 echo "    SEED: ${SEED}"
 echo "    N_TRIALS: ${N_TRIALS}"
 
-srun ./2_tune.py \
+srun ./1_tune.py \
              --n_trials $N_TRIALS \
              --level $LEVEL \
              --test_split_size $TEST_SPLIT_SIZE \

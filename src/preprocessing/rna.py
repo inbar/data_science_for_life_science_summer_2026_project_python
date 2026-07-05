@@ -83,6 +83,9 @@ def apply_basic_filtering(rna_dataset: AnnData,
 
     return rna_dataset.copy()
 
+def apply_scaling(dataset: AnnData):
+    scaler = StandardScaler()
+    dataset.layers[LAYER_NAME_SCALED] = scaler.fit_transform(dataset.to_df())
 
 def apply_scaling_to_split_data(training_rna_dataset: AnnData,
                                 test_rna_dataset: AnnData):
@@ -107,8 +110,8 @@ def apply_scaling_to_split_data(training_rna_dataset: AnnData,
     test_rna_dataset.layers[LAYER_NAME_SCALED] = test_data_scaled
 
 
-def apply_basic_filtering_to_split_data(training_rna_dataset_filtered: AnnData,
-                                        test_rna_dataset_filtered: AnnData,
+def apply_basic_filtering_to_split_data(training_rna_dataset: AnnData,
+                                        test_rna_dataset: AnnData,
                                         level: str = config.DEFAULT_LEVEL,
                                         min_gene_per_cell=200,
                                         min_cells_per_gene=3,
@@ -139,15 +142,21 @@ def apply_basic_filtering_to_split_data(training_rna_dataset_filtered: AnnData,
 
     """
 
-    sc.pp.filter_genes(training_rna_dataset_filtered,
+    sc.pp.filter_genes(training_rna_dataset,
                        min_cells=min_cells_per_gene)
-    sc.pp.filter_cells(training_rna_dataset_filtered,
+    sc.pp.filter_cells(training_rna_dataset,
                        min_genes=min_gene_per_cell)
 
-    training_rna_dataset_filtered = training_rna_dataset_filtered[
-        training_rna_dataset_filtered.obs['pct_counts_mt'] < max_pct_mito, :]
+    training_rna_dataset_filtered = training_rna_dataset[
+        training_rna_dataset.obs['pct_counts_mt'] < max_pct_mito, :]
+
+
+
     training_rna_dataset_filtered = training_rna_dataset_filtered[
         ~training_rna_dataset_filtered.obs[level].isin(LABLES_TO_DROP), :]
+
+    test_rna_dataset_filtered = test_rna_dataset[
+        ~test_rna_dataset.obs[level].isin(LABLES_TO_DROP), :]
 
     test_genes_to_keep = test_rna_dataset_filtered.var_names.isin(
         training_rna_dataset_filtered.var_names)
