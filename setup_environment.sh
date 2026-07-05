@@ -12,16 +12,18 @@ USER="$(whoami)"
 # standalone scripts
 export PYTHONPATH="${PWD}:${PYTHONPATH}"
 
-case "$HOSTNAME" in
-    localhost)
+echo $PYTHONPATH
+
+if [ $(getconf _NPROCESSORS_ONLN) -lt 16 ]; then
+        echo "Localhost"
         export PROJECT_HOME_ROOT="/Users/${USER}"
-        ;;
-    *)
+else
+        echo "Server"
         export PROJECT_HOME_ROOT="/data/scratch/${USER}"
         source /home/$USER/miniconda3/etc/profile.d/conda.sh
-        ;;
-esac
+fi
 
+export DATA_HOME="${PROJECT_HOME_ROOT}/.data_science_project"
 
 # Log level
 # Options: DEBUG, INFO, WARN, CRITICAL

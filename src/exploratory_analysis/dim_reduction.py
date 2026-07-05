@@ -1,5 +1,9 @@
 import scanpy as sc
 
+import config
+from preprocessing.rna import OBSM_NAME_PCA_HARMONY, OBSM_NAME_UMAP_HARMONY
+
+
 def perform_pca_in_place(dataset,
                          n_pcs=config.N_PCS,
                          seed=config.DEFAULT_SEED):

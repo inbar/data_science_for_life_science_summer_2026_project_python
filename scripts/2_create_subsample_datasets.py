@@ -10,6 +10,7 @@ import warnings
 from anndata import ImplicitModificationWarning
 from pandas.errors import PerformanceWarning
 
+from scripts.helpers.arg_types import bool_value
 from src import config
 from src import logs
 from src.persistence import datasets as dataset_persistence
@@ -54,7 +55,7 @@ if __name__ == "__main__":
                         default=config.DEFAULT_SUBSAMPLE_SIZE)
     parser.add_argument("--level", type=str, default=config.DEFAULT_LEVEL)
     parser.add_argument("--seed", type=int, default=config.DEFAULT_SEED)
-    parser.add_argument("--force_recreate", type=bool, default=False)
+    parser.add_argument("--force_recreate", type=bool_value, default=False)
     parsed_args = parser.parse_args()
 
     main(parsed_args)

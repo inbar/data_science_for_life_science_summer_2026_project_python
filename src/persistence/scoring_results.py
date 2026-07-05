@@ -46,7 +46,8 @@ def save_results(results: pd.DataFrame,
                               level=level,
                               test_split_size=test_split_size,
                               seed=seed,
-                              root_dir=root_dir)
+                              root_dir=root_dir,
+                              tag=tag)
     file_path.parent.mkdir(parents=True, exist_ok=True)
     results.to_csv(file_path,
                    index=True,

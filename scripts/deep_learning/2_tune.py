@@ -10,18 +10,18 @@ import logging
 from src import config
 from src import logs
 from src.deep_learning import tuning
+from src.persistence import parameter_tuning
 from src.persistence import splits as split_persistence
 from src.persistence import subsampling
 from src.preprocessing import rna as rna_preprocessing
 from src.preprocessing import splitting
-from src.persistence import parameter_tuning
 
 logs.setup_logging(__file__)
 log = logging.getLogger(__file__)
 
+SUBSAMPLE_SIZE_FOR_TUNING = 10_000
+TEST_SPLIT_SIZE_FOR_TUNING = 15
 
-SUBSAMPLE_SIZE_FOR_TUNING=10_000
-TEST_SPLIT_SIZE_FOR_TUNING=15
 
 def main(args):
     level = args.level
@@ -66,6 +66,9 @@ def main(args):
     rna_dataset_test = test_data["rna"]
     target_df_test = rna_preprocessing.build_target_df(rna_dataset_test,
                                                        level)
+
+    rna_preprocessing.apply_scaling_to_split_data(rna_dataset_training,
+                                                  rna_dataset_test)
 
     study = tuning.tune(
         training_data=rna_dataset_training,

@@ -124,29 +124,29 @@ $ source setup_environment.sh
 ## Download raw archives
 
 ### GSE164378_RAW.tar
-curl -o GSE164378_RAW.tar https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164378/suppl/GSE164378_RAW.tar
+curl -o "${DATA_HOME}/GSE164378_RAW.tar" https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164378/suppl/GSE164378_RAW.tar
 
 ### GSE164378_sc.meta.data_3P.csv.gz
-curl -o GSE164378_sc.meta.data_3P.csv.gz https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164378/suppl/GSE164378_sc.meta.data_3P.csv.gz
+curl -o ""${DATA_HOME}/GSE164378_sc.meta.data_3P.csv.gz"" https://ftp.ncbi.nlm.nih.gov/geo/series/GSE164nnn/GSE164378/suppl/GSE164378_sc.meta.data_3P.csv.gz
 
 ## Create and save MuData datasets
 ## -> all data is saved in /data/scratch/${USER}/.data_science_project
 
 $ cd scripts
 ### 1. Extract full dataset
-$ ./1_load_full_dataset.py
+$ srun --partition big --mem 24G ./1_load_full_dataset.py
 
 ### 2. Optionally: create subsample 
-$ ./2_create_subsample_datasets.py --subsample_size 10_000
+$ srun --partition big --mem 24G ./2_create_subsample_datasets.py --subsample_size 10_000
 
 ### 3. Create test/training split
-$ ./3_split_dataset.py --test_split_size 40 # i.e: test/training = 40%/60%, based on full dataset
-$ ./3_split_dataset.py --test_split_size 40 --subsample_size 10_000 # based on the 10_000 subsample
+$ srun --partition big --mem 24G ./3_split_dataset.py --test_split_size 40 # i.e: test/training = 40%/60%, based on full dataset
+$ srun --partition big --mem 24G ./3_split_dataset.py --test_split_size 40 --subsample_size 10_000 # based on the 10_000 subsample
 
 ### 4. Feature selection 
 ### - Safely reduce genes, based on a specific split
 ### - This saves a copy of the split data
-$ ./4_feature_selection.py --test_split_size 40
+$ srun --partition big --mem 24G  ./4_feature_selection.py --test_split_size 40
 ```
 
 No that we have all the data ready and we can submit the interesting jobs to the computing nodes. 
@@ -155,13 +155,26 @@ No that we have all the data ready and we can submit the interesting jobs to the
 
 ```bash
 ###
-# Train the MLP model
+# Train / Tune the MLP model
 ###
 
-# TODO: submit a batch job to the cluster
+# Tune 
+$ cd cluster_scripts/deep_learning
+$ sbatch 1_tune_mlp_model.sh --export=ALL,N_TRIALS=50
+
+
+# Train the model (using the tuned parameters)
+$ sbatch 2_train_mlp_model.sh --export=ALL,N_EPOCHS=50,TAG=some_tag
 ```
 
+Now we can run the scoring:
+```bash
+$ cd cluster_scripts
+$ sbatch 2_run_scoring.sh --export=ALL,METHOD=spearman
 
+# MI needs more resources
+$ sbatch --cpus-per-task=8 --time=06:00:00 run_scoring.sh --export=ALL,METHOD=mi_ksg,K_NEIGHBORS=5,TAG=KNN_5
+```
 
 ---
 

@@ -22,6 +22,7 @@ the benchmark while common types still dominate. Doublets are dropped.
 from __future__ import annotations
 
 import gzip
+import logging
 import tarfile
 from pathlib import Path
 
@@ -31,10 +32,10 @@ import pandas as pd
 import scipy.io
 from anndata import AnnData
 
-from src.persistence import subsampling
 from src import config
-
-import logging
+from src.persistence import subsampling
+from src.preprocessing import rna as rna_preprocessing
+from src.preprocessing import adt as adt_preprocessing
 
 log = logging.getLogger(__file__)
 
@@ -178,7 +179,7 @@ def save_mudata_dataset_to_disk(dataset: MuData,
     dataset.write(output_file_path)
 
 
-def save_full_dataset(dataset: MuData, level: str = config.DEFAULT_LEVEL):
+def save_full_dataset(dataset: mu.MuData, level: str = config.DEFAULT_LEVEL):
     dataset_file = get_dataset_file_path(level=level)
     save_mudata_dataset_to_disk(dataset, dataset_file)
 
@@ -227,6 +228,7 @@ def read_h5mu_file(file_path: Path) -> MuData:
 
 
 def load_or_create_full_dataset(raw_archive_path=RAW_ARCHIVE_PATH,
+                                level:str = config.DEFAULT_LEVEL,
                                 force_recreate=False) -> mu.MuData:
     log.info("Load or create dataset full dataset from raw MatrixMarket files")
 
@@ -268,6 +270,23 @@ def load_or_create_full_dataset(raw_archive_path=RAW_ARCHIVE_PATH,
                                     rna_features,
                                     adt_features,
                                     metadata)
+
+
+
+    rna_dataset, adt_dataset = dataset["rna"], dataset["adt"]
+
+    # Normalize
+    rna_preprocessing.calculate_qc_metrics_in_place(rna_dataset)
+    rna_preprocessing.normalize_in_place(rna_dataset)
+    adt_preprocessing.normalize_in_place(adt_dataset)
+
+
+    filtered_dataset = create_mudata_dataset_from_anndata(
+        rna_dataset,
+        adt_dataset
+    )
+
+    save_full_dataset(filtered_dataset, level)
 
     return dataset
 

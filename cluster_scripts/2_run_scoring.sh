@@ -4,7 +4,7 @@
 #SBATCH --output=/home/%u/.logs/sbatch/run_scoring_%j.log
 #SBATCH --partition=big
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=2
+#SBATCH --cpus-per-task=4
 #SBATCH --ntasks=1
 #SBATCH --mem-per-cpu=8G
 #SBATCH --time=01:00:00

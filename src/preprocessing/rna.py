@@ -25,6 +25,24 @@ OBSM_NAME_UMAP_HARMONY = "X_umap_harmony"
 LABLES_TO_DROP = ["Doublet"]
 
 
+def normalize_in_place(dataset: AnnData,
+                       target_sum=1e4):
+    # Store unnormalized counts in a layer
+    dataset.layers[LAYER_NAME_RAW_COUNTS] = dataset.X.copy()
+
+    # Normalize the counts for each row to `target_sum`
+    sc.pp.normalize_total(dataset, target_sum=target_sum)
+
+    # Store normalized counts in a layer
+    dataset.layers[LAYER_NAME_NORMALIZED_COUNTS] = dataset.X.copy()
+
+    # Logarithmize
+    sc.pp.log1p(dataset)
+
+    # Store normalized counts in a layer
+    dataset.layers[LAYER_NAME_LOGARITHMIZED] = dataset.X.copy()
+
+
 def calculate_qc_metrics_in_place(dataset):
     # Mitochondrial genes
     dataset.var["mt"] = dataset.var["gene_name"].str.startswith("MT-")

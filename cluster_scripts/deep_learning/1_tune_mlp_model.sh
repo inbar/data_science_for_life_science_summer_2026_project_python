@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --job-name=tune_mlp_model
-#SBATCH --chdir=../
+#SBATCH --chdir=../../
+#SBATCH --output=/home/%u/.logs/sbatch/tune_mlp_model_%j.log
 #SBATCH --partition=big
 #SBATCH --cpus-per-task=4
-#SBATCH --mem-per-cpu=3G
+#SBATCH --mem=16G
 #SBATCH --time=06:00:00
-#SBATCH --output=/home/%u/.logs/sbatch/tune_mlp_model_%A_%a.log
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=%u@zedat.fu-berlin.de
 
@@ -32,3 +32,5 @@ srun ./2_tune.py \
              --level $LEVEL \
              --test_split_size $TEST_SPLIT_SIZE \
              --seed $SEED
+
+echo done

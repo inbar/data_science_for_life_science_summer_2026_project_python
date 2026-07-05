@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --job-name=train_mlp_model
-#SBATCH --chdir=../
+#SBATCH --chdir=../../
+#SBATCH --output=/home/%u/.logs/sbatch/train_mlp_model_%A_%a.log
 #SBATCH --partition=big
 #SBATCH --cpus-per-task=4
-#SBATCH --mem-per-cpu=3G
+#SBATCH --mem-per-cpu=4G
 #SBATCH --time=06:00:00
-#SBATCH --output=/home/%u/.logs/sbatch/train_mlp_model_%A_%a.log
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=%u@zedat.fu-berlin.de
 
