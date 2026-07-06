@@ -187,9 +187,13 @@ def main(args):
                                               level=level,
                                               tag=tag)
 
+            # IG feature importance is unsigned: raw signed attributions are
+            # near-random against the ground truth (attribution sign reflects
+            # which DIRECTION a gene pushes the prediction, not whether it's
+            # informative), so downstream consumers expect |attribution|.
             results = run_mlp_ig(trained_model,
                                  test_data_rna,
-                                 target_df)
+                                 target_df).abs()
         case _:
             raise ValueError(f"No such method: {method}")
 

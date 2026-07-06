@@ -90,6 +90,13 @@ def main(args):
     n_genes = training_data_rna.n_vars
     n_celltypes = training_data_rna.obs[level].nunique()
 
+    # NOTE: --seed previously only controlled which data split was loaded --
+    # weight init and DataLoader shuffling ran on whatever the ambient torch RNG
+    # state happened to be, so training (and everything downstream: IG-MLP scores,
+    # the trained model) was NOT actually reproducible despite accepting --seed.
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+
     log.info("Creating new model instance...")
     model = GeneExpressionModel(
         input_dim=n_genes,

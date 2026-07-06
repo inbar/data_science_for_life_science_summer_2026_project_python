@@ -86,7 +86,8 @@ def main(args):
         test_data=rna_dataset_test,
         labeling_df_training=target_df_training,
         labeling_df_test=target_df_test,
-        n_trials=n_trials
+        n_trials=n_trials,
+        seed=seed
     )
 
     # NOTE: root_dir must match where 1_train.py's load_best_params() looks

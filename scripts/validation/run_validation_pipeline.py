@@ -26,6 +26,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from src import config
+
 SCRIPTS_DIR = Path(__file__).resolve().parent.parent
 DEEP_LEARNING_DIR = SCRIPTS_DIR / "deep_learning"
 REPO_ROOT = SCRIPTS_DIR.parent
@@ -108,10 +110,14 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--test_split_size", type=int, default=40)
     parser.add_argument("--n_epochs", type=int, default=20)
-    parser.add_argument("--n_trials", type=int, default=5,
-                        help="Optuna trials for hyperparameter tuning (kept low "
-                             "by default -- this is a smoke test, not a real "
-                             "hyperparameter search).")
+    parser.add_argument("--n_trials", type=int, default=config.N_TRIALS,
+                        help="Optuna trials for hyperparameter tuning (defaults "
+                             "to the project's own config.N_TRIALS). Both the "
+                             "sampler and each trial's model are now seeded "
+                             "(see tuning.py), so a low trial count under-explores "
+                             "the search space deterministically rather than "
+                             "randomly -- pass a smaller value only for a "
+                             "deliberately quick, non-representative smoke test.")
     parser.add_argument("--h5mu_path", type=str,
                         default="", required=False,
                         help="Passed to seed_full_dataset_from_h5mu.py; falls "

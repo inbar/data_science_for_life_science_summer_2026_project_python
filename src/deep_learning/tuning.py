@@ -16,7 +16,8 @@ from src.preprocessing.rna import LAYER_NAME_SCALED
 def get_objective_function(training_data: AnnData,
                            test_data: AnnData,
                            labeling_df_training: pd.DataFrame,
-                           labeling_df_test: pd.DataFrame):
+                           labeling_df_test: pd.DataFrame,
+                           seed: int = config.DEFAULT_SEED):
     def objective(trial):
         # The hyperparameter matrix
         learning_rate = trial.suggest_float("learning_rate", 1e-4, 5e-3,
@@ -24,6 +25,12 @@ def get_objective_function(training_data: AnnData,
         weight_decay = trial.suggest_float("weight_decay", 1e-6, 1e-3, log=True)
         batch_size = trial.suggest_categorical("batch_size", [32, 64, 128, 256])
         input_dropout = trial.suggest_float("input_dropout", 0.1, 0.5)
+
+        # Deterministic per-trial seed: reproducible given (seed, n_trials), but
+        # each trial still gets a fresh (not identical) init/shuffle draw, so no
+        # single hyperparameter combination is favoured or penalised purely by
+        # reusing the same init across every trial.
+        torch.manual_seed(seed + trial.number)
 
         n_genes = training_data.n_vars
         n_celltypes = len(labeling_df_training.columns)
@@ -74,14 +81,21 @@ def tune(training_data: AnnData,
          test_data: AnnData,
          labeling_df_training: pd.DataFrame,
          labeling_df_test: pd.DataFrame,
-         n_trials:int = config.N_TRIALS) -> Study:
-    study = optuna.create_study(direction="maximize")
+         n_trials:int = config.N_TRIALS,
+         seed: int = config.DEFAULT_SEED) -> Study:
+    # NOTE: previously unseeded -- which hyperparameters got tried (TPESampler's
+    # own search order) and each trial's model init/shuffling were both governed
+    # by ambient RNG state, so re-running tuning with "the same" --seed could
+    # (and did) land on a different best_params.yml every time.
+    study = optuna.create_study(direction="maximize",
+                                sampler=optuna.samplers.TPESampler(seed=seed))
 
     objective_function = get_objective_function(
         training_data=training_data,
         test_data=test_data,
         labeling_df_training=labeling_df_training,
-        labeling_df_test=labeling_df_test
+        labeling_df_test=labeling_df_test,
+        seed=seed
     )
 
     study.optimize(objective_function, n_trials=n_trials)
