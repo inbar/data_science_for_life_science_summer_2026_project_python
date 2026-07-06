@@ -5,6 +5,7 @@ import pandas as pd
 import scanpy as sc
 import mudata as mu
 from anndata import AnnData
+from scipy.stats import rankdata
 from sklearn.preprocessing import StandardScaler
 
 from src import config
@@ -64,6 +65,41 @@ def apply_basic_filtering(rna_dataset: AnnData,
     rna_dataset = rna_dataset[~rna_dataset.obs[level].isin(LABLES_TO_DROP), :]
 
     return rna_dataset.copy()
+
+
+def rank_zscore(matrix: np.ndarray) -> np.ndarray:
+    """Per-gene average-rank transform, then z-score. Returns float32.
+
+    This is the **shared feature transform**: every marker-scoring method (Spearman,
+    partial correlation, MI, and the MLP/IG) must see exactly this matrix so that
+    differences in their gene rankings reflect the statistical measure and not
+    different inputs. The average-rank step also collapses the many dropout zeros of
+    a gene to a single shared rank, mitigating the zero-inflation confound (important
+    for MI, whose Ross-2014 kNN estimator is sensitive to it).
+    """
+    matrix = np.asarray(matrix, dtype=np.float64)
+    ranked = np.empty_like(matrix)
+    for j in range(matrix.shape[1]):
+        ranked[:, j] = rankdata(matrix[:, j], method="average")
+    ranked -= ranked.mean(axis=0, keepdims=True)
+    sd = ranked.std(axis=0, ddof=0, keepdims=True)
+    sd[sd == 0] = 1.0
+    return (ranked / sd).astype(np.float32)
+
+
+def apply_rank_transform_to_split_data(training_rna_dataset: AnnData,
+                                       test_rna_dataset: AnnData):
+    """Store the shared rank-transformed/z-scored matrix in ``LAYER_NAME_RANK_TRANSFORMED``.
+
+    Ranks are computed *within* each split independently (rank is a relative,
+    within-sample quantity), mirroring how each dataset is scored on its own cells.
+    This layer is the correct input for **all four** methods; use it instead of
+    ``LAYER_NAME_SCALED`` in training/tuning/scoring.
+    """
+    training_rna_dataset.layers[LAYER_NAME_RANK_TRANSFORMED] = rank_zscore(
+        training_rna_dataset.to_df().values)
+    test_rna_dataset.layers[LAYER_NAME_RANK_TRANSFORMED] = rank_zscore(
+        test_rna_dataset.to_df().values)
 
 
 def apply_scaling_to_split_data(training_rna_dataset: AnnData,

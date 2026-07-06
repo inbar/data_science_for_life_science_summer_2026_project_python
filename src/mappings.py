@@ -14,8 +14,33 @@ to an empty list and are dropped from the ground truth.
 from __future__ import annotations
 
 import logging
+import re
 
 log = logging.getLogger(__file__)
+
+# antigen names that have no informative PBMC RNA gene -> dropped from D_c
+_CONTROL_TOKENS = (
+    "isotype", "control", "mouse igg", "rat igg", "igg1", "igg2",
+    "hashtag", "totalseq", "adt", "unmapped",
+)
+
+
+def _normalise(name: str) -> str:
+    """Strip TotalSeq dedup suffixes / tags and upper-case for dict lookup.
+
+    ADT feature names carry clone/dedup suffixes (e.g. ``CD3-1``, ``CD4-1``,
+    ``CD56-1``) that are absent from the curated ``PROTEIN_TO_GENES`` keys; without
+    this normalisation almost nothing maps and the ground truth is empty.
+    """
+    s = str(name).strip()
+    s = re.sub(r"[-_.]\d+$", "", s)                 # trailing '-1', '.2', ...
+    s = s.replace("_", "").replace(" ", "").replace("/", "")
+    return s.upper()
+
+
+def is_control(name: str) -> bool:
+    low = str(name).lower()
+    return any(tok in low for tok in _CONTROL_TOKENS)
 
 # Ground Truth Mapping: Cell Type -> Primary Expected Protein
 # From: Hao et al.
@@ -223,19 +248,22 @@ PROTEIN_TO_GENES: dict[str, list[str]] = {
 
 def get_marker_genes_for_proteins(protein_names):
     marker_genes = set()
-
     for protein_name in protein_names:
-        genes = set()
-
-        if protein_name in PROTEIN_TO_GENES:
-            genes = {gene for gene in PROTEIN_TO_GENES[protein_name]}
-        marker_genes = marker_genes.union(genes)
-
+        marker_genes.update(map_protein_to_genes(protein_name))
     return marker_genes
 
 
 def map_protein_to_genes(protein_name):
-    if protein_name in PROTEIN_TO_GENES:
-        return PROTEIN_TO_GENES[protein_name]
+    """Encoding gene symbol(s) for an ADT feature name (or [] if none).
 
-    return set()
+    Normalises the antibody/clone name, drops isotype/hashtag controls, and falls
+    back to the identity for bare ``CDxx`` antigens whose gene symbol matches.
+    """
+    if is_control(protein_name):
+        return []
+    key = _normalise(protein_name)
+    if key in PROTEIN_TO_GENES:
+        return PROTEIN_TO_GENES[key]
+    if re.fullmatch(r"CD\d+[A-Z]?", key):
+        return [key]
+    return []

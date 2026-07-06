@@ -36,8 +36,12 @@ log = logging.getLogger(__file__)
 
 def run_spearman(rna_data: AnnData,
                  labeling_df: pd.DataFrame) -> pd.DataFrame:
-    expression_levels_df = rna_data.to_df().copy()
-    expression_levels_df.columns = rna_data.var["gene_name"]
+    # Linear row -> rank-transformed matrix. Spearman is Pearson-on-ranks, so this
+    # (or the estimator's internal ranking) is what makes the score a Spearman rho.
+    expression_levels_df = pd.DataFrame(
+        data=rna_data.to_df(rna_preprocessing.LAYER_NAME_RANK_TRANSFORMED),
+        index=rna_data.obs_names,
+        columns=rna_data.var["gene_name"])
 
     return spearman_correlation.calculate_scores(expression_levels_df,
                                                  labeling_df)
@@ -45,13 +49,17 @@ def run_spearman(rna_data: AnnData,
 
 def run_partial_correlation(test_rna_data: AnnData,
                             labeling_df: pd.DataFrame) -> pd.DataFrame:
-    scaled_expression_levels_df = pd.DataFrame(
-        data=test_rna_data.to_df(rna_preprocessing.LAYER_NAME_SCALED),
+    # Linear row -> rank-transformed matrix. The Ledoit-Wolf precision estimate is
+    # second-moment based and thus outlier/zero-inflation sensitive; ranks make it
+    # a robust (Spearman) partial correlation and better-conditioned. This is the
+    # conditional partner of Spearman and must use the SAME (rank) input.
+    rank_transformed_expression_levels_df = pd.DataFrame(
+        data=test_rna_data.to_df(rna_preprocessing.LAYER_NAME_RANK_TRANSFORMED),
         index=test_rna_data.obs_names,
         columns=test_rna_data.var["gene_name"])
 
     return ledoit_wolf_partial_correlation.calculate_scores(
-        expression_levels_df=scaled_expression_levels_df,
+        expression_levels_df=rank_transformed_expression_levels_df,
         labeling_df=labeling_df
     )
 
@@ -60,8 +68,14 @@ def run_mutual_information(test_rna_data: AnnData,
                            labeling_df: pd.DataFrame,
                            k_neighbors: int,
                            seed: int) -> pd.DataFrame:
-    expression_levels_df = test_rna_data.to_df().copy()
-    expression_levels_df.columns = test_rna_data.var["gene_name"]
+    # Nonlinear row -> normalized + z-scored (NOT rank-transformed). MI is estimated
+    # per gene by the Ross (2014) kNN estimator (continuous feature vs discrete
+    # target); it needs only normalization, and z-scoring a single feature is a
+    # monotonic rescale that leaves the estimate unchanged.
+    expression_levels_df = pd.DataFrame(
+        data=test_rna_data.to_df(rna_preprocessing.LAYER_NAME_SCALED),
+        index=test_rna_data.obs_names,
+        columns=test_rna_data.var["gene_name"])
 
     return mutual_information_ksg.calculate_scores(expression_levels_df,
                                                    labeling_df,
@@ -143,9 +157,14 @@ def main(args):
     log.info(f"  n_genes (cols): {test_data_rna.n_vars}")
     log.info("")
 
-    # Scaling both rna datasets and saving as a layer to be used in downstream computations
+    # Build BOTH shared feature layers used downstream:
+    #  - LAYER_NAME_SCALED (normalized + z-scored) -> MI and the MLP/IG (nonlinear row)
+    #  - LAYER_NAME_RANK_TRANSFORMED (average-rank + z-score) -> Spearman and partial
+    #    correlation (linear row)
     rna_preprocessing.apply_scaling_to_split_data(training_data_rna,
                                                   test_data_rna)
+    rna_preprocessing.apply_rank_transform_to_split_data(training_data_rna,
+                                                         test_data_rna)
 
     match method:
         case m if m == config.METHOD_SPEARMAN:

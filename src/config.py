@@ -75,7 +75,9 @@ METHODS = [METHOD_SPEARMAN, METHOD_PARTIAL_CORRELATION, METHOD_MI_KSG,
 METHOD_LABELS = {
     METHOD_SPEARMAN: "Spearman",
     METHOD_PARTIAL_CORRELATION: "Partial correlation",
-    METHOD_MI_KSG: "Mutual information (KSG)",
+    # sklearn.mutual_info_classif uses the Ross (2014) kNN estimator for a
+    # continuous feature vs. a discrete target (not KSG, which is continuous-only).
+    METHOD_MI_KSG: "Mutual information",
     METHOD_IG_MLP: "Integrated Gradients (MLP)",
 }
 

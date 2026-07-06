@@ -5,7 +5,8 @@ import scanpy as sc
 from anndata import AnnData
 
 from src import config
-from src.preprocessing.adt import LAYER_NAME_LOGARITHMIZED
+from src.preprocessing.adt import (LAYER_NAME_LOGARITHMIZED,
+                                   LAYER_NAME_CENTERED_LOG_RATIO)
 from src.mappings import map_protein_to_genes
 
 
@@ -13,28 +14,31 @@ def compute_marker_proteins(adt_dataset: AnnData,
                             level: str,
                             pval_cutoff: float = config.DEFAULT_GROUND_TRUTH_P_VAL_CUTOFF,
                             log2fc_min: float = config.DEFAULT_GROUND_TRUTH_LOG2FC_MIN,
-                            top_k: int = config.DEFAULT_GROUND_TRUTH_TOP_K) -> pd.DataFrame:
+                            top_k: int = config.DEFAULT_GROUND_TRUTH_TOP_K,
+                            layer: str = LAYER_NAME_CENTERED_LOG_RATIO) -> pd.DataFrame:
     """Find top_k elevated proteins per cell type.
 
-    To find elevated proteins we apply a one-vs-rest differential analysis
-    proteins per cell type using Wilcoxon method on the logarithmized data
-    (not CLR, which typically contains negative values).
+    To find elevated proteins we apply a one-vs-rest differential analysis of the
+    proteins per cell type using the Wilcoxon method on the chosen ADT ``layer``.
+    The default is the centered-log-ratio (CLR) layer, the CITE-seq standard that
+    controls for per-cell staining/sequencing depth (Stoeckius 2017); pass
+    ``layer="logarithmized"`` for a plain log1p (raw-count-equivalent) test.
 
     The results are filtered to have:
-    1. `score` < 0
+    1. `score` > 0
     2. `pval` < pval_cutoff
-    3. `log2fc` < log2fc_min
+    3. `log2fc` > log2fc_min
 
     These proteins will be then considered as markers for each cell type.
     """
 
     # Calculate wilcoxon one vs. rest differential expression for the *proteins*
-    # using logarithmized data (not CLR, which typically contains negative values).
+    # on the chosen normalization layer (CLR by default).
     #
     # Pick the top_k proteins.
     sc.tl.rank_genes_groups(adt_dataset,
                             use_raw=False,
-                            layer=LAYER_NAME_LOGARITHMIZED,
+                            layer=layer,
                             groupby=level,
                             n_genes=top_k,
                             method="wilcoxon")
@@ -57,8 +61,9 @@ def build_ground_truth(adt_dataset: AnnData,
                        level: str = config.DEFAULT_LEVEL,
                        pval_cutoff: float = config.DEFAULT_GROUND_TRUTH_P_VAL_CUTOFF,
                        log2fc_min: float = config.DEFAULT_GROUND_TRUTH_LOG2FC_MIN,
-                       top_k: int = config.DEFAULT_GROUND_TRUTH_TOP_K) -> dict[
-    str, set]:
+                       top_k: int = config.DEFAULT_GROUND_TRUTH_TOP_K,
+                       layer: str = LAYER_NAME_CENTERED_LOG_RATIO) -> tuple[
+    dict[str, set], pd.DataFrame]:
     """
     Build the ground truth mapping: Cell -> set of drive genes
 
@@ -81,7 +86,8 @@ def build_ground_truth(adt_dataset: AnnData,
                                               level=level,
                                               pval_cutoff=pval_cutoff,
                                               log2fc_min=log2fc_min,
-                                              top_k=top_k)
+                                              top_k=top_k,
+                                              layer=layer)
 
     marker_proteins["genes"] = marker_proteins["protein_name"].apply(
         map_protein_to_genes)
@@ -90,9 +96,9 @@ def build_ground_truth(adt_dataset: AnnData,
     for cell_type, df in marker_proteins.groupby("group", observed=True):
         drivers = set(df["genes"].explode())
         drivers = drivers.intersection(genes_of_interest)
-        cell_type_to_driver_gene_mapping[cell_type] = drivers
+        cell_type_to_driver_gene_mapping[str(cell_type)] = drivers
 
-    return cell_type_to_driver_gene_mapping
+    return cell_type_to_driver_gene_mapping, marker_proteins
 
 
 # TODO

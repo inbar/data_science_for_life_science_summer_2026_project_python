@@ -68,13 +68,13 @@ def main(args):
         dropout_rate=hyperparams["input_dropout"]
     )
 
-    trained_model = training.train(model=model,
-                                   training_data=training_data_rna,
-                                   labeling_df=target_df,
-                                   n_epochs=n_epochs,
-                                   learning_rate=hyperparams["learning_rate"],
-                                   weight_decay=hyperparams["weight_decay"],
-                                   batch_size=hyperparams["batch_size"])
+    trained_model, _history = training.train(model=model,
+                                             training_data=training_data_rna,
+                                             labeling_df=target_df,
+                                             n_epochs=n_epochs,
+                                             learning_rate=hyperparams["learning_rate"],
+                                             weight_decay=hyperparams["weight_decay"],
+                                             batch_size=hyperparams["batch_size"])
 
     model_persistence.save_trained_model_weights(trained_model,
                                                  test_split_size=test_split_size,

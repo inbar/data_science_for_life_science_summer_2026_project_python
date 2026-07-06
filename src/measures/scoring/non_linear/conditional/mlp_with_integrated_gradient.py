@@ -15,6 +15,11 @@ def calculate_scores(trained_model: GeneExpressionModel,
                      labeling_df: pd.DataFrame) -> pd.DataFrame:
     log.info("Computing Non-Linear/Conditional scoring: Integrated Gradient over a trained MLP")
 
+    # eval() is essential: the model has BatchNorm/Dropout, which must use running
+    # statistics (not per-batch) and be disabled during attribution, or the IG
+    # scores become batch-dependent and noisy.
+    trained_model.eval()
+
     device = get_device()
 
     dataset_tensor, _ = data_conversion.to_dataset_loader(

@@ -29,22 +29,29 @@ def calculate_scores(expression_levels_df: pd.DataFrame,
         shrunk covariance scores between each gene and cell type.
     """
 
-    log.info("Computing Linear/Conditional scoring: partial correlation (Leodit-Wolf)")
+    log.info("Computing Linear/Conditional scoring: partial correlation (Ledoit-Wolf)")
     num_genes = expression_levels_df.columns.size
 
-    # Horizontally stack X and Y into a single matrix for global covariance.
+    # Horizontally stack X and Y into a single matrix for a global covariance.
     # Shape: (n_cells, n_genes + n_cell_types)
     combined_matrix = np.hstack([expression_levels_df.values, labeling_df.values])
 
-    # Compute the Ledoit-Wolf shrunk covariance matrix.
-    # sklearn expects observations as rows, features as columns with shape (n_samples, n_features)
-    # The output matrix is then of shape (n_features, n_features),
-    # i.e: all columns vs. all columns (of the input)
+    # Ledoit-Wolf shrunk covariance -> guaranteed positive-definite and
+    # well-conditioned (the empirical gene covariance is ill-conditioned: dropout,
+    # collinearity, p ~ n).
     shrunk_cov_matrix, _ = ledoit_wolf(combined_matrix)
 
-    # Pick the values of interest: rectangle: X columns vs Y columns.
-    # This extracts the rows corresponding to genes, and columns corresponding to targets.
-    association_slice = shrunk_cov_matrix[:num_genes, num_genes:]
+    # PARTIAL correlation requires the PRECISION matrix (inverse covariance): the
+    # covariance block alone is only a *marginal* association. Invert, then convert
+    # the precision to partial correlations:
+    #     rho_partial(i, j) = -P_ij / sqrt(P_ii * P_jj)
+    # which is the correlation of i and j conditioned on all other variables.
+    precision_matrix = np.linalg.inv(shrunk_cov_matrix)
+    d = np.sqrt(np.diag(precision_matrix))
+    partial_correlation_matrix = -precision_matrix / np.outer(d, d)
+
+    # Rectangle: gene rows vs. cell-type-target columns.
+    association_slice = partial_correlation_matrix[:num_genes, num_genes:]
 
     results = pd.DataFrame(
         association_slice,

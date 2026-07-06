@@ -1,5 +1,14 @@
 import scanpy as sc
 
+from src import config
+
+# Embedding keys stored in ``.obsm`` (mirrors src.preprocessing.rna).
+OBSM_NAME_PCA = "X_pca"
+OBSM_NAME_PCA_HARMONY = "X_pca_harmony"
+OBSM_NAME_UMAP = "X_umap"
+OBSM_NAME_UMAP_HARMONY = "X_umap_harmony"
+
+
 def perform_pca_in_place(dataset,
                          n_pcs=config.N_PCS,
                          seed=config.DEFAULT_SEED):

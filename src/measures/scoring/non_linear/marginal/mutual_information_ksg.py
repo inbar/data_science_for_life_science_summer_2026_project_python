@@ -27,11 +27,15 @@ def calculate_scores(expression_levels_df: pd.DataFrame,
                      labeling_df: pd.DataFrame,
                      k_neighbors=3,
                      seed=config.DEFAULT_SEED):
-    """Computes the marginal KSG Mutual Information for every gene against
-    every cell type.
+    """Computes the marginal Mutual Information for every gene against every cell type.
 
-    KSG: A. Kraskov, H. Stogbauer and P. Grassberger, "Estimating mutual
-           information". Phys. Rev. E 69, 2004.
+    Uses ``sklearn.feature_selection.mutual_info_classif``, i.e. the **Ross (2014)**
+    kNN estimator for MI between a continuous feature (gene expression) and a
+    discrete target (the one-vs-rest cell-type indicator) -- not the KSG (2004)
+    estimator, which is for two continuous variables. Displayed simply as "MI".
+
+    Ross, B. C. "Mutual information between discrete and continuous data sets."
+    PLoS ONE 9(2), 2014.
 
     Parameters
     ----------
@@ -52,7 +56,7 @@ def calculate_scores(expression_levels_df: pd.DataFrame,
         A long-form dataframe or a wide matrix mapping Genes to their MI scores.
       """
 
-    log.info("Computing Non-Linear/marginal scoring: Mutual Information (KSG)")
+    log.info("Computing Non-Linear/marginal scoring: Mutual Information (Ross 2014)")
 
     # n_jobs=-1 will utilize all available CPU cores automatically
     n_jobs = -1

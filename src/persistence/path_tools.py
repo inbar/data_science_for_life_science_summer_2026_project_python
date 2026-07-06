@@ -22,7 +22,7 @@ def get_subfolder_path(subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
     if tag is not config.DEFAULT_TAG:
         tag_suffix = f"_{tag}"
     else:
-        tag_suffix = None
+        tag_suffix = ""
 
     subdir = SUBDIR_TEMPLATE.format(
         split_size=test_split_size,

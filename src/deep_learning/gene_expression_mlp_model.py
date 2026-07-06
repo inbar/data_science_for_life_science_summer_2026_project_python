@@ -37,6 +37,13 @@ class GeneExpressionModel(nn.Module):
         x = self.hidden(x)
         return self.output(x)
 
+    def embed(self, x):
+        """Penultimate-layer (256-dim) representation, for the MLP-map UMAP
+        diagnostic. Run under ``model.eval()`` so BatchNorm uses running stats."""
+        x = self.input_layer(x)
+        x = self.hidden(x)
+        return x
+
 
 def load_trained_model(n_genes: int,
                        n_cells: int,

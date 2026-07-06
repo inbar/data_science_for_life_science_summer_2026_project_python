@@ -108,10 +108,14 @@ def plot(results: list[pd.DataFrame],
                percent_cumulative,
                percent_cumulative_perfect,
                auc_rel) in plot_data.items():
-        ax.plot(percent_samples, percent_cumulative, label=f"{name} Method (AUC = {auc_rel:.2f})")
-        ax.plot(percent_samples, percent_cumulative_perfect, linestyle=':',
-                label=f"Perfect Model ({name})")
+        ax.plot(percent_samples, percent_cumulative, label=f"{name} (AUC = {auc_rel:.2f})")
         ax.fill_between(percent_samples, percent_cumulative, alpha=0.1)
+
+    # The perfect-model curve depends only on the (shared) ground truth, so it is
+    # identical for every method -> plot it once.
+    ref_samples, _, ref_perfect, _ = next(iter(plot_data.values()))
+    ax.plot(ref_samples, ref_perfect, linestyle=':', color='black',
+            label='Perfect model')
 
     ax.plot([0, 100], [0, 100], color='navy', lw=1.5, linestyle='--',
             label='Baseline (Random)')

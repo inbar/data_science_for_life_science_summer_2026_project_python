@@ -1,0 +1,15 @@
+{
+ "level": "celltype.l1",
+ "subsample_size": 10000,
+ "test_split_size": 40,
+ "seed": 42,
+ "n_universe": 2060,
+ "n_train": 6000,
+ "n_test": 4000,
+ "methods": [
+  "spearman",
+  "partial_corr",
+  "mi_ksg",
+  "ig_mlp"
+ ]
+}

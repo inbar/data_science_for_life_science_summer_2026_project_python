@@ -17,7 +17,6 @@ import pandas as pd
 import scanpy as sc
 from matplotlib.lines import Line2D
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401  (registers 3d projection)
-from sympy import false, true
 
 from config import FIGURES_DIR_PATH
 from config import METHOD_LABELS
@@ -60,7 +59,7 @@ def set_style():
 
 def get_or_create_figure_dir(name, level=None):
     """Directory figures are written to for ``fmt`` at the active level."""
-    dir = (FIGURES_DIR_PATH / level / name) if lvl else FIGURES_DIR_PATH
+    dir = (FIGURES_DIR_PATH / level / name) if level else (FIGURES_DIR_PATH / name)
     dir.mkdir(parents=True, exist_ok=True)
     return dir
 
@@ -90,7 +89,7 @@ def qc_violins(qc_metrics: pd.DataFrame, cols, figsize=None):
     axes = np.atleast_1d(axes)
     for ax, col in zip(axes, cols):
         value = qc_metrics[col].values
-        parts = ax.violinplot(value, showextrema=false)
+        parts = ax.violinplot(value, showextrema=False)
         for b in parts["bodies"]:
             b.set_facecolor(PALETTE[0])
             b.set_alpha(0.6)
@@ -187,6 +186,7 @@ def protein_marker_validation_heatmap(dataframe):
 
     cb = fig.colorbar(im, ax=ax, shrink=0.6, pad=0.02)
     cb.set_label("Z-score (CLR expression)")
+    return fig, ax
 
 
 # --------------------------------------------------------------------------- #

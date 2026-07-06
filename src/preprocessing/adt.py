@@ -1,5 +1,6 @@
 import muon as mu
 import scanpy as sc
+import scipy.sparse as sp
 
 LAYER_NAME_RAW_COUNTS = "raw_counts"
 LAYER_NAME_CENTERED_LOG_RATIO = "clr"
@@ -16,8 +17,10 @@ def normalize_in_place(dataset):
     dataset.layers[LAYER_NAME_LOGARITHMIZED] = sc.pp.log1p(dataset, copy=True).X
 
 
-    # Compute CLR
-    dataset.X = dataset.X.tocsc().astype('float32')
+    # Compute CLR (muon expects counts; ensure a CSC float32 matrix whether the
+    # incoming X is sparse or dense).
+    X = dataset.X
+    dataset.X = (X.tocsc() if sp.issparse(X) else sp.csc_matrix(X)).astype('float32')
     mu.prot.pp.clr(dataset)
 
 
