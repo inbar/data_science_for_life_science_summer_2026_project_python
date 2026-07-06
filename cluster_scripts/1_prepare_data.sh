@@ -53,7 +53,7 @@ fi
 cd scripts
 
 echo "Load datast..."
-srun --mem 24G ./1_load_full_dataset.py \
+srun --mem 24G ./_1_load_full_dataset.py \
            --level $LEVEL \
            --force_recreate $FORCE_RECREATE
 
@@ -63,7 +63,7 @@ srun --mem 24G ./1_load_full_dataset.py \
 
 echo "Split datast..."
 
-srun ./3_split_dataset.py \
+srun ./_3_split_dataset.py \
                --level $LEVEL \
                --test_split_size $TEST_SPLIT_SIZE \
                --seed $SEED
@@ -71,13 +71,13 @@ srun ./3_split_dataset.py \
 #####
 ##### 3. Feature selection
 ######
-#
-##echo "Feature selection..."
-#
-#srun ./4_feature_selection.py \
-#               --level $LEVEL \
-#               --test_split_size $TEST_SPLIT_SIZE \
-#               --seed $SEED
-#
-#
+
+#echo "Feature selection..."
+
+srun ./_4_feature_selection.py \
+               --level $LEVEL \
+               --test_split_size $TEST_SPLIT_SIZE \
+               --seed $SEED
+
+
 echo "Done!"

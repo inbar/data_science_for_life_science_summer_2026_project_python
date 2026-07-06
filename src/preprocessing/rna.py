@@ -109,7 +109,6 @@ def apply_scaling_to_split_data(training_rna_dataset: AnnData,
     test_data_scaled = scaler.transform(test_rna_dataset.to_df())
     test_rna_dataset.layers[LAYER_NAME_SCALED] = test_data_scaled
 
-
 def apply_basic_filtering_to_split_data(training_rna_dataset: AnnData,
                                         test_rna_dataset: AnnData,
                                         level: str = config.DEFAULT_LEVEL,

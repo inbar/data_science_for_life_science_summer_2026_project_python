@@ -10,6 +10,7 @@ import warnings
 from anndata import ImplicitModificationWarning
 from pandas.errors import PerformanceWarning
 
+from scripts.helpers.args import dump_args
 from src import ground_truth
 from src import ground_truth_2
 from src import config
@@ -27,19 +28,11 @@ logs.setup_logging(__file__)
 log = logging.getLogger(__file__)
 
 
-def main(args):
-    subsample_size = args.subsample_size
-    level = args.level
-    test_split_size = args.test_split_size
-    seed = args.seed
-    tag = args.tag
-
-    log.info(f"Create Subsample")
-    log.info("==================")
-    for k, v in vars(parsed_args).items():
-        log.info(f"   {k}: {v}")
-    log.info("")
-
+def main(subsample_size: int,
+         level: str,
+         test_split_size: int,
+         seed: int,
+         tag: str):
     test_data = splits_persistence.load_test_data(
         split_name=splits_persistence.HVG_SPLIT_NAME,
         test_split_size=test_split_size,
@@ -82,4 +75,12 @@ if __name__ == "__main__":
     parser.add_argument("--tag", type=str, default=config.DEFAULT_TAG)
     parsed_args = parser.parse_args()
 
-    main(parsed_args)
+    log.info(f"Create Subsample")
+    log.info("==================")
+    dump_args(parsed_args, log)
+
+    main(subsample_size=parsed_args.subsample_size,
+         level=parsed_args.level,
+         test_split_size=parsed_args.test_split_size,
+         seed=parsed_args.seed,
+         tag=parsed_args.tag)

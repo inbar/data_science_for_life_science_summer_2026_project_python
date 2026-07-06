@@ -7,6 +7,7 @@
 import argparse
 import logging
 
+from scripts.helpers.args import dump_args
 from src import config
 from src import logs
 from src.deep_learning import tuning
@@ -23,18 +24,10 @@ SUBSAMPLE_SIZE_FOR_TUNING = 10_000
 TEST_SPLIT_SIZE_FOR_TUNING = 15
 
 
-def main(args):
-    level = args.level
-    seed = args.seed
-    test_split_size = args.test_split_size
-    n_trials = args.n_trials
-
-    log.info(f"Running Training")
-    log.info("===================")
-    for k, v in vars(parsed_args).items():
-        log.info(f"   {k}: {v}")
-    log.info("")
-
+def main(level: str = config.DEFAULT_LEVEL,
+    seed: int = config.DEFAULT_SEED,
+    test_split_size: int = config.DEFAULE_TEST_SPLIT_SIZE,
+    n_trials: int = config.N_TRIALS):
     # To avoid hyperparameter data leakage, we do the optimization explicitly
     # on a subsample of the training data and do not touch the test data.
     #
@@ -80,7 +73,6 @@ def main(args):
 
     parameter_tuning.save_best_params(study.best_params)
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--n_trials", type=int, default=config.N_TRIALS)
@@ -90,4 +82,13 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=config.DEFAULT_SEED)
     parsed_args = parser.parse_args()
 
-    main(parsed_args)
+    log.info(f"Running Training")
+    log.info("===================")
+    dump_args(parsed_args, log)
+
+    main(
+        level=parsed_args.level,
+        seed=parsed_args.seed,
+        test_split_size=parsed_args.test_split_size,
+        n_trials=parsed_args.n_trials
+    )

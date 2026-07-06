@@ -10,6 +10,7 @@ import warnings
 from anndata import ImplicitModificationWarning
 from pandas.errors import PerformanceWarning
 
+from scripts.helpers.args import dump_args
 from src.deep_learning.gene_expression_mlp_model import GeneExpressionModel
 from src import config
 from src import logs
@@ -28,20 +29,13 @@ logs.setup_logging(__file__)
 log = logging.getLogger(__file__)
 
 
-def main(args):
-    subsample_size = args.subsample_size
-    level = args.level
-    test_split_size = args.test_split_size
-    seed = args.seed
-    n_epochs = args.n_epochs
-    tag = args.tag
-
-    log.info(f"Running Training")
-    log.info("===================")
-    for k, v in vars(parsed_args).items():
-        log.info(f"   {k}: {v}")
-    log.info("")
-
+def main(
+    subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
+    level: str = config.DEFAULT_LEVEL,
+    test_split_size: int = config.DEFAULE_TEST_SPLIT_SIZE,
+    seed: int = config.DEFAULT_SEED,
+    n_epochs: int = config.DEFAULT_N_EPOCHS,
+    tag: str = config.DEFAULT_TAG):
     log.info("Loading split data...")
     log.info("")
     training_data = split_persistence.load_training_data(
@@ -98,4 +92,13 @@ if __name__ == "__main__":
     parser.add_argument("--tag", type=str, default=config.DEFAULT_TAG)
     parsed_args = parser.parse_args()
 
-    main(parsed_args)
+    log.info(f"Running Training")
+    log.info("===================")
+    dump_args(parsed_args, log)
+
+    main(subsample_size=parsed_args.subsample_size,
+         level=parsed_args.level,
+         test_split_size=parsed_args.test_split_size,
+         seed=parsed_args.seed,
+         n_epochs=parsed_args.n_epochs,
+         tag=parsed_args.tag)

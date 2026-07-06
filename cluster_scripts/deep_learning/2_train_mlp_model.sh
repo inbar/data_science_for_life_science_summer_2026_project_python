@@ -33,7 +33,7 @@ echo "    SEED: ${SEED}"
 echo "    N_EPOCHS: ${N_EPOCHS}"
 echo "    TAG: ${TAG}"
 
-srun ./2_train.py \
+srun ./_2_train.py \
              --level $LEVEL \
              --test_split_size $TEST_SPLIT_SIZE \
              --seed $SEED \

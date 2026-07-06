@@ -11,6 +11,7 @@ import numpy as np
 from anndata import ImplicitModificationWarning
 from pandas.errors import PerformanceWarning
 
+from scripts.helpers.args import dump_args
 from src import config
 from src import logs
 from src.persistence import datasets as dataset_persistence
@@ -27,19 +28,11 @@ logs.setup_logging(__file__)
 log = logging.getLogger(__file__)
 
 
-def main(args):
-    subsample_size = args.subsample_size
-    level = args.level
-    test_split_size = args.test_split_size
-    seed = args.seed
-    tag = args.tag
-
-    log.info(f"Split subsample")
-    log.info("=================")
-    for k, v in vars(parsed_args).items():
-        log.info(f"   {k}: {v}")
-    log.info("")
-
+def main(subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
+    level: str = config.DEFAULT_LEVEL,
+    test_split_size: int = config.DEFAULE_TEST_SPLIT_SIZE,
+    seed: int = config.DEFAULT_SEED,
+    tag: str = config.DEFAULT_TAG):
     if subsample_size is config.DEFAULT_SUBSAMPLE_SIZE:
         dataset = dataset_persistence.load_or_create_full_dataset(level=level)
     else:
@@ -108,4 +101,12 @@ if __name__ == "__main__":
     parser.add_argument("--tag", type=str, default=config.DEFAULT_TAG)
     parsed_args = parser.parse_args()
 
-    main(parsed_args)
+    log.info(f"Split subsample")
+    log.info("=================")
+    dump_args(parsed_args, log)
+
+    main(subsample_size=parsed_args.subsample_size,
+         level=parsed_args.level,
+         test_split_size=parsed_args.test_split_size,
+         seed=parsed_args.seed,
+         tag=parsed_args.tag)

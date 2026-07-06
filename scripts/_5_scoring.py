@@ -11,6 +11,7 @@ import pandas as pd
 from anndata import ImplicitModificationWarning, AnnData
 from pandas.errors import PerformanceWarning
 
+from scripts.helpers.args import dump_args
 from src import config
 from src import logs
 from src.deep_learning import gene_expression_mlp_model
@@ -102,22 +103,14 @@ def get_trained_model(training_data: AnnData,
     )
 
 
-def main(args):
-    subsample_size = args.subsample_size
-    level = args.level
-    test_split_size = args.test_split_size
-    seed = args.seed
-    method = args.method
-    k_neighbors = args.k_neighbors
-    tag = args.tag
-    model_tag = args.model_tag
-
-    log.info(f"Running Scoring")
-    log.info("==========================")
-    for k, v in vars(parsed_args).items():
-        log.info(f"   {k}: {v}")
-    log.info("")
-
+def main(method: str,
+        subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
+         level: str = config.DEFAULT_LEVEL,
+         test_split_size: int = config.DEFAULE_TEST_SPLIT_SIZE,
+         seed: int = config.DEFAULT_SEED,
+         k_neighbors: int = config.DEFAULT_K_NEIGHBORS,
+         tag: str = config.DEFAULT_TAG,
+         model_tag: str = config.DEFAULT_TAG):
     log.info("Loading split data...")
     log.info("")
     training_data, test_data = split_persistence.load_split_data(
@@ -167,8 +160,6 @@ def main(args):
                                               level=level,
                                               tag=model_tag)
 
-
-
             results = run_mlp_ig(trained_model,
                                  test_data_rna,
                                  target_df)
@@ -205,4 +196,17 @@ if __name__ == "__main__":
     parser.add_argument("--model_tag", type=str, default=config.DEFAULT_TAG)
     parsed_args = parser.parse_args()
 
-    main(parsed_args)
+    log.info(f"Running Scoring")
+    log.info("===================")
+    dump_args(parsed_args, log)
+
+    main(
+        method=parsed_args.method,
+        subsample_size=parsed_args.subsample_size,
+        level=parsed_args.level,
+        test_split_size=parsed_args.test_split_size,
+        seed=parsed_args.seed,
+        k_neighbors=parsed_args.k_neighbors,
+        tag=parsed_args.tag,
+        model_tag=parsed_args.model_tag,
+    )

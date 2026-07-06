@@ -6,11 +6,10 @@
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=4
 #SBATCH --ntasks=1
-#SBATCH --mem-per-cpu=4G
-#SBATCH --time=01:00:00
+#SBATCH --mem-per-cpu=8G
+#SBATCH --time=06:00:00
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=%u@zedat.fu-berlin.de
-#SBATCH --array=1
 
 USER=$(whoami)
 
@@ -45,7 +44,7 @@ USER=$(whoami)
 #
 # TEST_SPLIT_SIZE=40 sbatch 2_run_scoring.sh spearman
 # TEST_SPLIT_SIZE=40 sbatch 2_run_scoring.sh partial_corr
-# TEST_SPLIT_SIZE=40 sbatch --cpus-per-task=8 2_run_scoring.sh mi_ksg
+# TEST_SPLIT_SIZE=40 sbatch --cpus-per-task=8 --mem-per-cpu=4G 2_run_scoring.sh mi_ksg
 # TEST_SPLIT_SIZE=40 MODEL_TAG=tuned sbatch 2_run_scoring.sh ig_mlp
 
 
@@ -76,7 +75,7 @@ echo "    MODEL_TAG: ${MODEL_TAG}"
 source setup_environment.sh
 cd scripts
 
-srun ./5_scoring.py --subsample_size $SUBSAMPLE_SIZE \
+srun ./_5_scoring.py --subsample_size $SUBSAMPLE_SIZE \
                --level $LEVEL \
                --test_split_size $TEST_SPLIT_SIZE \
                --seed $SEED \

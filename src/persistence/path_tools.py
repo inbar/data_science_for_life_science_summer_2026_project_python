@@ -25,7 +25,11 @@ def get_subfolder_path(subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
     )
 
     path = f"{subdir_prefix}_{subdir}"
-    path = path if tag is config.DEFAULT_TAG else f"{path}_{tag}"
+
+    if not tag.strip():
+        path = path
+    else:
+        path = f"{path}_{tag}"
 
     file_path = Path(level) / path
 

@@ -10,7 +10,8 @@ import warnings
 from anndata import ImplicitModificationWarning
 from pandas.errors import PerformanceWarning
 
-from scripts.helpers.arg_types import bool_value
+from scripts.helpers.args import bool_value
+from scripts.helpers.args import dump_args
 from src import config
 from src import logs
 from src.persistence import datasets as dataset_persistence
@@ -24,18 +25,10 @@ logs.setup_logging(__file__)
 log = logging.getLogger(__file__)
 
 
-def main(args):
-    subsample_size = args.subsample_size
-    level = args.level
-    seed = args.seed
-    force_recreate = args.force_recreate
-
-    log.info(f"Create Subsample")
-    log.info("==================")
-    for k, v in vars(parsed_args).items():
-        log.info(f"   {k}: {v}")
-    log.info("")
-
+def main(subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
+         level: str = config.DEFAULT_LEVEL,
+         seed: int = config.DEFAULT_SEED,
+         force_recreate: bool = False):
     dataset = dataset_persistence.load_or_create_subsample(
         subsample_size=subsample_size,
         level=level,
@@ -58,4 +51,11 @@ if __name__ == "__main__":
     parser.add_argument("--force_recreate", type=bool_value, default=False)
     parsed_args = parser.parse_args()
 
-    main(parsed_args)
+    log.info(f"Create Subsample")
+    log.info("==================")
+    dump_args(parsed_args, log)
+
+    main(subsample_size=args.subsample_size,
+         level=args.level,
+         seed=args.seed,
+         force_recreate=args.force_recreate)
