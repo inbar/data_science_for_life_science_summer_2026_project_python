@@ -29,13 +29,12 @@ logs.setup_logging(__file__)
 log = logging.getLogger(__file__)
 
 
-def main(
-    subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
-    level: str = config.DEFAULT_LEVEL,
-    test_split_size: int = config.DEFAULE_TEST_SPLIT_SIZE,
-    seed: int = config.DEFAULT_SEED,
-    n_epochs: int = config.DEFAULT_N_EPOCHS,
-    tag: str = config.DEFAULT_TAG):
+def main(subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
+         level: str = config.DEFAULT_LEVEL,
+         test_split_size: int = config.DEFAULE_TEST_SPLIT_SIZE,
+         seed: int = config.DEFAULT_SEED,
+         n_epochs: int = config.DEFAULT_N_EPOCHS,
+         tag: str = config.DEFAULT_TAG):
     log.info("Loading split data...")
     log.info("")
     training_data = split_persistence.load_training_data(
