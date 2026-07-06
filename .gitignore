@@ -31,9 +31,11 @@ env/
 .DS_Store
 Thumbs.db
 
+
 # Intellij
 .idea/
 
 # Mutagen sync
 synced/
 remote_logs/
+mutagen.yml.lock
