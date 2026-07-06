@@ -62,7 +62,7 @@ echo "    TAG: ${TAG}"
 source setup_environment.sh
 cd scripts
 
-srun ./5_scoring.py --subsample_size $SUBSAMPLE_SIZE \
+srun ./7_scoring.py --subsample_size $SUBSAMPLE_SIZE \
                --level $LEVEL \
                --test_split_size $TEST_SPLIT_SIZE \
                --seed $SEED \

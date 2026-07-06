@@ -59,20 +59,38 @@ srun ./1_load_full_dataset.py \
                --force_recreate $FORCE_RECREATE
 
 ##
-# 3. Split
+# 3. Exploratory analysis (QC, UMAP, ADT label validation)
 ##
 
-srun ./3_split_dataset.py \
+srun ./3_exploratory_analysis.py \
+               --level $LEVEL \
+               --seed $SEED
+
+##
+# 4. Split
+##
+
+srun ./4_split_dataset.py \
                --level $LEVEL \
                --test_split_size $TEST_SPLIT_SIZE \
                --seed $SEED
 
 
 ##
-# 3. Feature selection
+# 5. Feature selection
 ##
 
-srun ./4_feature_selection.py \
+srun ./5_feature_selection.py \
+               --level $LEVEL \
+               --test_split_size $TEST_SPLIT_SIZE \
+               --seed $SEED
+
+
+##
+# 6. Ground truth
+##
+
+srun ./6_ground_truth.py \
                --level $LEVEL \
                --test_split_size $TEST_SPLIT_SIZE \
                --seed $SEED

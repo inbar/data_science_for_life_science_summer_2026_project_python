@@ -6,7 +6,6 @@ B: !!set
   CR2: null
   ENTPD1: null
   ICOSLG: null
-  IGHD: null
   MS4A1: null
 CD4 T: !!set
   CD109: null
@@ -29,7 +28,7 @@ CD8 T: !!set
   CD3G: null
   CD8A: null
   CD8B: null
-  CD96: null
+  ICOS: null
   KLRK1: null
   PTPRC: null
   TRAC: null
@@ -40,38 +39,39 @@ DC: !!set
   HLA-DRA: null
   HLA-DRB1: null
   IL3RA: null
+  ITGA4: null
   NRP1: null
   TFRC: null
   THBD: null
 Mono: !!set
   ANPEP: null
   CD86: null
+  CD93: null
   CLEC12A: null
   FCGR1A: null
   ITGAM: null
   ITGAX: null
   ITGB2: null
-  PECAM1: null
   PVR: null
   SIRPA: null
 NK: !!set
   CD244: null
-  CD38: null
   FCGR3A: null
   FCGR3B: null
   KLRK1: null
   NCAM1: null
   NCR1: null
   NCR3: null
+  PTPRC: null
 other: !!set
   CD34: null
   CD69: null
   CLEC1B: null
   ITGA2: null
+  ITGA2B: null
   ITGB3: null
   NECTIN2: null
   PECAM1: null
-  TFRC: null
 other T: !!set
   CCR5: null
   CD2: null
@@ -79,7 +79,8 @@ other T: !!set
   CD3D: null
   CD3E: null
   CD3G: null
-  CD81: null
+  CD96: null
   IL7R: null
   KLRB1: null
   KLRK1: null
+  PTPRC: null

@@ -227,8 +227,22 @@ def read_h5mu_file(file_path: Path) -> MuData:
 
 
 def load_or_create_full_dataset(raw_archive_path=RAW_ARCHIVE_PATH,
-                                force_recreate=False) -> mu.MuData:
+                                force_recreate=False,
+                                level: str = config.DEFAULT_LEVEL) -> mu.MuData:
     log.info("Load or create dataset full dataset from raw MatrixMarket files")
+
+    # Check the level-specific cache FIRST: if the processed full dataset already
+    # exists, the raw archive is not needed at all (that is the point of caching
+    # -- and it lets a validation/dev flow seed this cache from elsewhere, e.g.
+    # scripts/validation/seed_full_dataset_from_h5mu.py, with no raw GEO data
+    # present). Checking the raw-file presence before the cache, as the original
+    # ordering did, made every cache permanently unusable without the raw files.
+    if dataset_exist(level=level):
+        if force_recreate:
+            log.info(f"Recreating dataset [force_recreate={force_recreate}]")
+        else:
+            log.info(f"Skipping creation [force_recreate={force_recreate}]")
+            return load_full_dataset(level=level)
 
     # Check if raw files exist and request download if not
     if not raw_archive_path.exists() or not RAW_METADATA_PATH.exists():
@@ -237,13 +251,6 @@ def load_or_create_full_dataset(raw_archive_path=RAW_ARCHIVE_PATH,
         log.error(f"Go to {config.FTP_URL} and download the files.")
         log.error("Place the files as is in the root of the repository.")
         raise FileNotFoundError(raw_archive_path)
-
-    if dataset_exist():
-        if force_recreate:
-            log.info(f"Recreating dataset [force_recreate={force_recreate}]")
-        else:
-            log.info(f"Skipping creation [force_recreate={force_recreate}]")
-            return load_full_dataset()
 
     # Extract files from the main archive
     extract_files_from_main_archive(
@@ -279,19 +286,22 @@ def load_or_create_subsample(subsample_size=config.DEFAULT_SUBSAMPLE_SIZE,
     log.info(
         f"Load or create dataset: subsample size={subsample_size}, level={level}")
 
-    if dataset_exist(subsample_size, seed):
+    # NOTE: level must be passed explicitly here (and below) -- omitting it
+    # meant every one of these checks/loads silently used config.DEFAULT_LEVEL
+    # instead of this function's own `level` argument.
+    if dataset_exist(subsample_size, seed, level=level):
         if force_recreate:
             log.info(f"Recreating dataset [force_recreate={force_recreate}]")
         else:
             log.info(f"Skipping creation [force_recreate={force_recreate}]")
-            return load_subsampled_dataset(subsample_size, seed)
+            return load_subsampled_dataset(subsample_size, seed, level=level)
 
     log.info(
         f"Creating subsample dataset: (subsample size={subsample_size}, level={level})")
 
     # Load or create full dataset.
     # For recreating the full dataset, it has to be run separately.
-    dataset = load_or_create_full_dataset()
+    dataset = load_or_create_full_dataset(level=level)
 
     # Subsample
     dataset = subsampling.subsample(dataset=dataset,

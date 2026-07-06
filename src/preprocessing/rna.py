@@ -125,6 +125,18 @@ def apply_scaling_to_split_data(training_rna_dataset: AnnData,
     test_rna_dataset.layers[LAYER_NAME_SCALED] = test_data_scaled
 
 
+def apply_scaling(rna_dataset: AnnData):
+    """Single-dataset variant of :func:`apply_scaling_to_split_data`: fit and
+    transform the SAME dataset (no separate held-out set to fit against). Use this
+    when only a training split is loaded (e.g. MLP training, which does not load
+    the test split), so ``LAYER_NAME_SCALED`` exists before ``to_df(layer=...)``
+    is called on it.
+    """
+    scaler = StandardScaler()
+    rna_dataset.layers[LAYER_NAME_SCALED] = scaler.fit_transform(
+        rna_dataset.to_df())
+
+
 def apply_basic_filtering_to_split_data(training_rna_dataset_filtered: AnnData,
                                         test_rna_dataset_filtered: AnnData,
                                         level: str = config.DEFAULT_LEVEL,

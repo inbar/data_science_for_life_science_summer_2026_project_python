@@ -139,14 +139,23 @@ $ ./1_load_full_dataset.py
 ### 2. Optionally: create subsample 
 $ ./2_create_subsample_datasets.py --subsample_size 10_000
 
-### 3. Create test/training split
-$ ./3_split_dataset.py --test_split_size 40 # i.e: test/training = 40%/60%, based on full dataset
-$ ./3_split_dataset.py --test_split_size 40 --subsample_size 10_000 # based on the 10_000 subsample
+### 3. Exploratory analysis (QC, UMAP +/- Harmony, ADT label validation)
+### - Runs on the subsampled (or full) dataset, before splitting
+$ ./3_exploratory_analysis.py --subsample_size 10_000
 
-### 4. Feature selection 
+### 4. Create test/training split
+$ ./4_split_dataset.py --test_split_size 40 # i.e: test/training = 40%/60%, based on full dataset
+$ ./4_split_dataset.py --test_split_size 40 --subsample_size 10_000 # based on the 10_000 subsample
+
+### 5. Feature selection 
 ### - Safely reduce genes, based on a specific split
 ### - This saves a copy of the split data
-$ ./4_feature_selection.py --test_split_size 40
+$ ./5_feature_selection.py --test_split_size 40
+
+### 6. Ground truth
+### - Protein-derived driver set D_c, built from CLR-normalized ADT + the gene
+###   universe from step 5
+$ ./6_ground_truth.py --test_split_size 40
 ```
 
 No that we have all the data ready and we can submit the interesting jobs to the computing nodes. 

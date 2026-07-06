@@ -31,7 +31,11 @@ BG_COLOR = "#BBBBBB"
 
 def set_style():
     mpl.rcParams.update({
-        "figure.dpi": 120,
+        # NOTE: Jupyter's inline display uses "figure.dpi" (not "savefig.dpi") to
+        # render a Figure returned from a cell. Keeping it equal to "savefig.dpi"
+        # means what you see inline is the same resolution as what P.save() writes
+        # to disk (>= 3840 px wide / true "4K" width for the 6.4in-wide panels).
+        "figure.dpi": 600,
         "savefig.dpi": 600,
         "savefig.bbox": "tight",
         "savefig.pad_inches": 0.02,

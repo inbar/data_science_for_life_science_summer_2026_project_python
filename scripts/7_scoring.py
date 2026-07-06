@@ -1,0 +1,232 @@
+#!/usr/bin/env python
+
+# To run the scripts run:
+# source setup_environment.sh
+# In the project root
+
+import argparse
+import warnings
+from pathlib import Path
+
+import pandas as pd
+from anndata import ImplicitModificationWarning, AnnData
+from pandas.errors import PerformanceWarning
+
+from src import config
+from src import logs
+from src.deep_learning import gene_expression_mlp_model
+from src.deep_learning.gene_expression_mlp_model import GeneExpressionModel
+from src.measures.scoring.linear.conditional import \
+    ledoit_wolf_partial_correlation
+from src.measures.scoring.linear.marginal import spearman_correlation
+from src.measures.scoring.non_linear.conditional import \
+    mlp_with_integrated_gradient
+from src.measures.scoring.non_linear.marginal import mutual_information_ksg
+from src.persistence import scoring_results as scoring_results_persistence
+from src.persistence import splits as split_persistence
+from src.preprocessing import rna as rna_preprocessing
+
+warnings.simplefilter("ignore", category=PerformanceWarning)
+warnings.simplefilter("ignore", category=ImplicitModificationWarning)
+
+import logging
+
+logs.setup_logging(__file__)
+log = logging.getLogger(__file__)
+
+
+def run_spearman(rna_data: AnnData,
+                 labeling_df: pd.DataFrame) -> pd.DataFrame:
+    # Linear row -> rank-transformed matrix. Spearman is Pearson-on-ranks, so this
+    # (or the estimator's internal ranking) is what makes the score a Spearman rho.
+    expression_levels_df = pd.DataFrame(
+        data=rna_data.to_df(rna_preprocessing.LAYER_NAME_RANK_TRANSFORMED),
+        index=rna_data.obs_names,
+        columns=rna_data.var["gene_name"])
+
+    return spearman_correlation.calculate_scores(expression_levels_df,
+                                                 labeling_df)
+
+
+def run_partial_correlation(test_rna_data: AnnData,
+                            labeling_df: pd.DataFrame) -> pd.DataFrame:
+    # Linear row -> rank-transformed matrix. The Ledoit-Wolf precision estimate is
+    # second-moment based and thus outlier/zero-inflation sensitive; ranks make it
+    # a robust (Spearman) partial correlation and better-conditioned. This is the
+    # conditional partner of Spearman and must use the SAME (rank) input.
+    rank_transformed_expression_levels_df = pd.DataFrame(
+        data=test_rna_data.to_df(rna_preprocessing.LAYER_NAME_RANK_TRANSFORMED),
+        index=test_rna_data.obs_names,
+        columns=test_rna_data.var["gene_name"])
+
+    return ledoit_wolf_partial_correlation.calculate_scores(
+        expression_levels_df=rank_transformed_expression_levels_df,
+        labeling_df=labeling_df
+    )
+
+
+def run_mutual_information(test_rna_data: AnnData,
+                           labeling_df: pd.DataFrame,
+                           k_neighbors: int,
+                           seed: int) -> pd.DataFrame:
+    # Nonlinear row -> normalized + z-scored (NOT rank-transformed). MI is estimated
+    # per gene by the Ross (2014) kNN estimator (continuous feature vs discrete
+    # target); it needs only normalization, and z-scoring a single feature is a
+    # monotonic rescale that leaves the estimate unchanged.
+    expression_levels_df = pd.DataFrame(
+        data=test_rna_data.to_df(rna_preprocessing.LAYER_NAME_SCALED),
+        index=test_rna_data.obs_names,
+        columns=test_rna_data.var["gene_name"])
+
+    return mutual_information_ksg.calculate_scores(expression_levels_df,
+                                                   labeling_df,
+                                                   k_neighbors=k_neighbors,
+                                                   seed=seed)
+
+
+def run_mlp_ig(trained_model: GeneExpressionModel,
+               test_rna_data: AnnData,
+               labeling_df: pd.DataFrame) -> pd.DataFrame:
+    scaled_expression_levels_df = pd.DataFrame(
+        data=test_rna_data.to_df(rna_preprocessing.LAYER_NAME_SCALED),
+        index=test_rna_data.obs_names,
+        columns=test_rna_data.var["gene_name"])
+
+    return mlp_with_integrated_gradient.calculate_scores(trained_model,
+                                                         expression_levels_df=scaled_expression_levels_df,
+                                                         labeling_df=labeling_df)
+
+
+def get_trained_model(training_data: AnnData,
+                      test_split_size: int,
+                      seed: int,
+                      subsample_size: int,
+                      level: str,
+                      tag: str):
+    n_genes = training_data.n_vars
+    n_cell_types = training_data.obs[level].nunique()
+
+    return gene_expression_mlp_model.load_trained_model(
+        n_genes=n_genes,
+        n_cells=n_cell_types,
+        test_split_size=test_split_size,
+        seed=seed,
+        subsample_size=subsample_size,
+        level=level,
+        tag=tag
+    )
+
+
+def main(args):
+    subsample_size = args.subsample_size
+    level = args.level
+    test_split_size = args.test_split_size
+    seed = args.seed
+    method = args.method
+    k_neighbors = args.k_neighbors
+    tag = args.tag
+    root_dir = args.root_dir
+
+    log.info(f"Running Scoring")
+    log.info("==========================")
+    for k, v in vars(parsed_args).items():
+        log.info(f"   {k}: {v}")
+    log.info("")
+
+    log.info("Loading split data...")
+    log.info("")
+    training_data, test_data = split_persistence.load_split_data(
+        split_name=split_persistence.HVG_SPLIT_NAME,
+        test_split_size=test_split_size,
+        subsample_size=subsample_size,
+        seed=seed,
+        level=level
+    )
+
+    training_data_rna = training_data["rna"]
+    test_data_rna = test_data["rna"]
+    target_df = rna_preprocessing.build_target_df(test_data_rna, level)
+
+    log.info("Training data (RNA modality):")
+    log.info("-----------------------------")
+    log.info(f"  n_cells (rows): {training_data_rna.n_obs}")
+    log.info(f"  n_genes (cols): {training_data_rna.n_vars}")
+    log.info("")
+
+    log.info("Test data (RNA modality):")
+    log.info("-----------------------------")
+    log.info(f"  n_cells (rows): {test_data_rna.n_obs}")
+    log.info(f"  n_genes (cols): {test_data_rna.n_vars}")
+    log.info("")
+
+    # Build BOTH shared feature layers used downstream:
+    #  - LAYER_NAME_SCALED (normalized + z-scored) -> MI and the MLP/IG (nonlinear row)
+    #  - LAYER_NAME_RANK_TRANSFORMED (average-rank + z-score) -> Spearman and partial
+    #    correlation (linear row)
+    rna_preprocessing.apply_scaling_to_split_data(training_data_rna,
+                                                  test_data_rna)
+    rna_preprocessing.apply_rank_transform_to_split_data(training_data_rna,
+                                                         test_data_rna)
+
+    match method:
+        case m if m == config.METHOD_SPEARMAN:
+            results = run_spearman(test_data_rna, target_df)
+        case m if m == config.METHOD_PARTIAL_CORRELATION:
+            results = run_partial_correlation(test_data_rna,
+                                              target_df)
+        case m if m == config.METHOD_MI_KSG:
+            results = run_mutual_information(test_data_rna,
+                                             target_df,
+                                             seed=seed,
+                                             k_neighbors=k_neighbors)
+        case m if m == config.METHOD_IG_MLP:
+            trained_model = get_trained_model(training_data=training_data_rna,
+                                              test_split_size=test_split_size,
+                                              seed=seed,
+                                              subsample_size=subsample_size,
+                                              level=level,
+                                              tag=tag)
+
+            results = run_mlp_ig(trained_model,
+                                 test_data_rna,
+                                 target_df)
+        case _:
+            raise ValueError(f"No such method: {method}")
+
+    log.info("Done.")
+
+    save_kwargs = dict(results=results,
+                      method=method,
+                      subsample_size=subsample_size,
+                      level=level,
+                      test_split_size=test_split_size,
+                      seed=seed,
+                      tag=tag)
+    if root_dir is not None:
+        save_kwargs["root_dir"] = Path(root_dir)
+    scoring_results_persistence.save_results(**save_kwargs)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--method", choices=config.METHODS, type=str,
+                        default=None)
+    parser.add_argument("--subsample_size", type=int,
+                        default=config.DEFAULT_SUBSAMPLE_SIZE)
+    parser.add_argument("--level", type=str, default=config.DEFAULT_LEVEL)
+    parser.add_argument("--test_split_size", type=int,
+                        default=config.DEFAULE_TEST_SPLIT_SIZE)
+    parser.add_argument("--seed", type=int, default=config.DEFAULT_SEED)
+    parser.add_argument("--k_neighbors", type=int,
+                        default=config.DEFAULT_K_NEIGHBORS,
+                        help="Only relevant for Mutual Information. Ignored otherwise.")
+    parser.add_argument("--tag", type=str, default=config.DEFAULT_TAG)
+    parser.add_argument("--root_dir", type=str, default=None,
+                        help="Override the results root (defaults to "
+                             "config.RESULTS_DIR_PATH, outside the repo). Pass a "
+                             "repo-local path (e.g. under local_data/) for a "
+                             "validation/dev run whose scores should be inspectable "
+                             "from the repo.")
+    parsed_args = parser.parse_args()
+
+    main(parsed_args)

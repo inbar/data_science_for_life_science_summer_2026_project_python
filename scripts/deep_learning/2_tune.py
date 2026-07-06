@@ -28,6 +28,7 @@ def main(args):
     seed = args.seed
     test_split_size = args.test_split_size
     n_trials = args.n_trials
+    subsample_size = args.subsample_size
 
     log.info(f"Running Training")
     log.info("===================")
@@ -41,9 +42,16 @@ def main(args):
     # This makes sure that the parameters never saw the test cells and
     # avoids the obstacle that the hyperparameters are optimized or over sensitive
     # to any cell in the test dataset.
+    #
+    # NOTE: subsample_size defaults to -1 (the full dataset's training split) so
+    # tuning draws from the largest, most representative pool regardless of what
+    # subsample_size a downstream training/scoring run uses; pass a matching
+    # --subsample_size explicitly if that split hasn't been prepared (e.g. in a
+    # small/dev run) and you want to tune from the smaller split instead.
     training_data = split_persistence.load_training_data(
         split_name=split_persistence.HVG_SPLIT_NAME,
         test_split_size=test_split_size,
+        subsample_size=subsample_size,
         seed=seed,
         level=level
     )
@@ -56,6 +64,7 @@ def main(args):
 
     # Split
     training_data, test_data = splitting.split(dataset,
+                                               level=level,
                                                test_split_size=TEST_SPLIT_SIZE_FOR_TUNING,
                                                seed=seed)
 
@@ -67,6 +76,11 @@ def main(args):
     target_df_test = rna_preprocessing.build_target_df(rna_dataset_test,
                                                        level)
 
+    # training.train() (called per-trial by tuning.objective) reads the "scaled"
+    # layer -- it must be computed here or every trial fails with a KeyError.
+    rna_preprocessing.apply_scaling_to_split_data(rna_dataset_training,
+                                                  rna_dataset_test)
+
     study = tuning.tune(
         training_data=rna_dataset_training,
         test_data=rna_dataset_test,
@@ -75,7 +89,11 @@ def main(args):
         n_trials=n_trials
     )
 
-    parameter_tuning.save_best_params(study.best_params)
+    # NOTE: root_dir must match where 1_train.py's load_best_params() looks
+    # (config.LOCAL_DATA_ROOT) -- the module's own default (config.PERSISTENCE_DIR,
+    # outside the repo) would silently save somewhere 1_train.py never checks.
+    parameter_tuning.save_best_params(study.best_params,
+                                      root_dir=config.LOCAL_DATA_ROOT)
 
 
 if __name__ == "__main__":
@@ -85,6 +103,10 @@ if __name__ == "__main__":
     parser.add_argument("--test_split_size", type=int,
                         default=config.DEFAULE_TEST_SPLIT_SIZE)
     parser.add_argument("--seed", type=int, default=config.DEFAULT_SEED)
+    parser.add_argument("--subsample_size", type=int,
+                        default=config.DEFAULT_SUBSAMPLE_SIZE,
+                        help="Which HVG split's training data to draw the tuning "
+                             "subsample from (default -1 = full dataset).")
     parsed_args = parser.parse_args()
 
     main(parsed_args)
