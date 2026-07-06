@@ -49,6 +49,7 @@ def save_results(results: pd.DataFrame,
                               root_dir=root_dir,
                               tag=tag)
     file_path.parent.mkdir(parents=True, exist_ok=True)
+    log.info(f"Saving results to file: {file_path}")
     results.to_csv(file_path,
                    index=True,
                    index_label=INDEX_COLUMN_NAME,

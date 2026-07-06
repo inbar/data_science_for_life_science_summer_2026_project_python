@@ -73,10 +73,9 @@ def run_mutual_information(test_rna_data: AnnData,
 def run_mlp_ig(trained_model: GeneExpressionModel,
                test_rna_data: AnnData,
                labeling_df: pd.DataFrame) -> pd.DataFrame:
-    scaled_expression_levels_df = pd.DataFrame(
-        data=test_rna_data.to_df(rna_preprocessing.LAYER_NAME_SCALED),
-        index=test_rna_data.obs_names,
-        columns=test_rna_data.var["gene_name"])
+    scaled_expression_levels_df = test_rna_data.to_df(
+        rna_preprocessing.LAYER_NAME_SCALED)
+    scaled_expression_levels_df.columns = test_rna_data.var["gene_name"]
 
     return mlp_with_integrated_gradient.calculate_scores(trained_model,
                                                          expression_levels_df=scaled_expression_levels_df,
@@ -104,7 +103,7 @@ def get_trained_model(training_data: AnnData,
 
 
 def main(method: str,
-        subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
+         subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
          level: str = config.DEFAULT_LEVEL,
          test_split_size: int = config.DEFAULE_TEST_SPLIT_SIZE,
          seed: int = config.DEFAULT_SEED,
@@ -166,8 +165,6 @@ def main(method: str,
         case _:
             raise ValueError(f"No such method: {method}")
 
-    log.info("Done.")
-
     scoring_results_persistence.save_results(
         results=results,
         method=method,
@@ -177,6 +174,8 @@ def main(method: str,
         seed=seed,
         tag=tag
     )
+
+    log.info("Done.")
 
 
 if __name__ == "__main__":
