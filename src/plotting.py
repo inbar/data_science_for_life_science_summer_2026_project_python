@@ -313,10 +313,12 @@ def _annotate_sig(ax, method_order, sig_pairs, data):
     top = max(np.nanmax(d) for d in data if len(d))
     step = 0.03 * (ax.get_ylim()[1] - ax.get_ylim()[0] + 1)
     idx = {m: i + 1 for i, m in enumerate(method_order)}
+    # Narrowest-span pairs stack lowest so wider brackets arc over them
+    # instead of crossing them (standard nested-bracket convention).
+    ordered = sorted((p for p in sig_pairs if p[0] in idx and p[1] in idx),
+                     key=lambda p: abs(idx[p[0]] - idx[p[1]]))
     lvl = 0
-    for (a, b, label) in sig_pairs:
-        if a not in idx or b not in idx:
-            continue
+    for (a, b, label) in ordered:
         x1, x2 = idx[a], idx[b]
         y = top + step * (lvl + 1)
         ax.plot([x1, x1, x2, x2], [y, y + step * 0.3, y + step * 0.3, y],
@@ -325,6 +327,12 @@ def _annotate_sig(ax, method_order, sig_pairs, data):
                 va="bottom",
                 fontsize=6)
         lvl += 1
+    # Size the axis to exactly fit the levels actually drawn -- must happen
+    # here (not by the caller after the fact), since stretching ylim post-hoc
+    # would compress these already-fixed data-unit gaps and make labels
+    # collide.
+    if lvl:
+        ax.set_ylim(top=top + step * (lvl + 1.6))
 
 
 def recovery_curves(curves: dict, figsize=(3.2, 2.8)):

@@ -163,11 +163,20 @@ def create_mudata_dataset(rna_matrix,
     adt_annotated_data.var["protein_name"] = adt_annotated_data.var_names
     adt_annotated_data.var_names_make_unique()
 
+    # NOTE: deliberately no MuData-level var_names_make_unique() here. RNA gene
+    # symbols and ADT antibody names legitimately collide across modalities
+    # (e.g. "CD4" gene vs "CD4" probe); calling it at the MuData level detects
+    # that cross-modality collision and silently prefixes EVERY var name with
+    # its modality ("rna:HES4", "adt:CD4"), project-wide -- not just the
+    # colliding ones. That desyncs var_names from the "gene_name"/"protein_name"
+    # columns above (captured before any prefixing), which every downstream
+    # scorer keys on, producing an all-NaN reindex. Per-modality uniqueness
+    # (already ensured above) is all downstream code actually needs, since
+    # scoring always accesses one modality's AnnData at a time.
     dataset = mu.MuData({
         "rna": rna_annotated_data,
         "adt": adt_annotated_data
     })
-    dataset.var_names_make_unique()
 
     return dataset
 

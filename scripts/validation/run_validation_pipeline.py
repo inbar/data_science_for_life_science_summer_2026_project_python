@@ -3,11 +3,13 @@
 --level / --subsample_size, as a smoke test (e.g. celltype.l1 + a 10k subsample).
 
 Each stage below is the actual production script (or its dev-only bridge, for
-stage 1, since this checkout has no raw GEO data) -- nothing here reimplements
-their logic; this just calls them in the right order with consistent arguments.
+stage 1, when no raw GEO data is present) -- nothing here reimplements their
+logic; this just calls them in the right order with consistent arguments.
 
-    seed_full_dataset_from_h5mu.py  (bridge; real 1_load_full_dataset.py on a
-                                     machine with the raw GEO archive)
+    seed_full_dataset_from_h5mu.py  (bridge; used unless --use_real_loader is
+                                     passed, in which case stage 1 is the real
+                                     1_load_full_dataset.py -- requires the raw
+                                     GEO archive, see config.RAW_ARCHIVE_PATH)
     2_create_subsample_datasets.py
     3_exploratory_analysis.py
     4_split_dataset.py
@@ -54,12 +56,17 @@ def main(args):
     subsampled = shared + ["--subsample_size", str(subsample_size)]
     split = subsampled + ["--test_split_size", str(test_split_size)]
 
-    # 1. Full dataset (bridge: seed from h5mu; the real pipeline's own
-    #    1_load_full_dataset.py, unmodified, if raw GEO data is present)
-    seed_args = ["--level", level, "--force_recreate", str(force_recreate)]
-    if h5mu_path:  # else let the bridge fall back to its own VALIDATION_H5MU default
-        seed_args += ["--h5mu_path", h5mu_path]
-    run(SCRIPTS_DIR / "validation", "seed_full_dataset_from_h5mu.py", seed_args)
+    # 1. Full dataset. Real loader (parses the raw GEO archive) when
+    #    --use_real_loader is passed and the archive is present; otherwise the
+    #    seed-from-h5mu dev bridge, for checkouts with no raw GEO data.
+    if args.use_real_loader:
+        run(SCRIPTS_DIR, "1_load_full_dataset.py",
+            ["--level", level, "--force_recreate", str(force_recreate)])
+    else:
+        seed_args = ["--level", level, "--force_recreate", str(force_recreate)]
+        if h5mu_path:  # else let the bridge fall back to its own VALIDATION_H5MU default
+            seed_args += ["--h5mu_path", h5mu_path]
+        run(SCRIPTS_DIR / "validation", "seed_full_dataset_from_h5mu.py", seed_args)
 
     # 2. Subsample
     run(SCRIPTS_DIR, "2_create_subsample_datasets.py", subsampled)
@@ -122,7 +129,13 @@ if __name__ == "__main__":
                         default="", required=False,
                         help="Passed to seed_full_dataset_from_h5mu.py; falls "
                              "back to its own VALIDATION_H5MU env var default "
-                             "if omitted.")
+                             "if omitted. Ignored when --use_real_loader is set.")
+    parser.add_argument("--use_real_loader", action="store_true",
+                        help="Stage 1 calls the real 1_load_full_dataset.py "
+                             "(parses the raw GEO archive) instead of the "
+                             "seed_full_dataset_from_h5mu.py dev bridge. "
+                             "Requires the raw archive to be present "
+                             "(see config.RAW_ARCHIVE_PATH).")
     parser.add_argument("--root_dir", type=str, default=None,
                         help="Repo-local output root for this run's exploratory/"
                              "ground-truth/scores/MLP-diagnostics artifacts. "

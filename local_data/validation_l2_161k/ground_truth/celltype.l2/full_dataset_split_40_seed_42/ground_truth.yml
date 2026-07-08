@@ -1,5 +1,6 @@
 ASDC: !!set
   CD22: null
+  CD72: null
   CLEC4C: null
   IL3RA: null
   NRP1: null
@@ -20,6 +21,7 @@ B memory: !!set
   CD19: null
   CD22: null
   CD40: null
+  CD72: null
   CR2: null
   MS4A1: null
   NT5E: null
@@ -36,31 +38,34 @@ B naive: !!set
   MS4A1: null
 CD14 Mono: !!set
   CD14: null
+  CD36: null
+  CD86: null
   CD93: null
   CLEC12A: null
   FCGR1A: null
   ITGAM: null
   ITGAX: null
-  ITGB2: null
   PVR: null
 CD16 Mono: !!set
-  ANPEP: null
   CD86: null
   CX3CR1: null
   FCGR3A: null
   FCGR3B: null
+  HLA-DRA: null
+  HLA-DRB1: null
+  IL3RA: null
   ITGA4: null
   ITGAX: null
   PECAM1: null
   SIRPA: null
 CD4 CTL: !!set
-  B3GAT1: null
   CD109: null
   CD2: null
   CD3D: null
   CD3E: null
   CD3G: null
   CD4: null
+  ICOS: null
   TRAC: null
   TRBC1: null
   TRBC2: null
@@ -101,21 +106,23 @@ CD4 TCM: !!set
 CD4 TEM: !!set
   CD109: null
   CD2: null
-  CD209: null
   CD28: null
+  CD3D: null
+  CD3E: null
+  CD3G: null
   CD4: null
   CD96: null
   DPP4: null
   IL7R: null
   PTPRC: null
 CD8 Naive: !!set
+  CD2: null
   CD27: null
   CD3D: null
   CD3E: null
   CD3G: null
   CD8A: null
   CD8B: null
-  IL7R: null
   KLRK1: null
   NT5E: null
   PTPRC: null
@@ -131,6 +138,7 @@ CD8 Proliferating: !!set
   KLRK1: null
 CD8 TCM: !!set
   CD2: null
+  CD27: null
   CD28: null
   CD3D: null
   CD3E: null
@@ -138,15 +146,15 @@ CD8 TCM: !!set
   CD8A: null
   CD8B: null
   CD96: null
-  CD99: null
   IL7R: null
   KLRK1: null
+  PTPRC: null
 CD8 TEM: !!set
-  B3GAT1: null
   CD2: null
   CD3D: null
   CD3E: null
   CD3G: null
+  CD81: null
   CD8A: null
   CD8B: null
   KLRK1: null
@@ -155,7 +163,7 @@ CD8 TEM: !!set
   TRBC1: null
   TRBC2: null
 Eryth: !!set
-  CD36: null
+  CD47: null
   CD55: null
   CD59: null
   FAS: null
@@ -170,6 +178,7 @@ HSPC: !!set
   TFRC: null
 ILC: !!set
   CD96: null
+  DPP4: null
   IL2RA: null
   IL7R: null
   KIT: null
@@ -181,7 +190,6 @@ MAIT: !!set
   CCR5: null
   CD2: null
   CD28: null
-  CD8A: null
   CD96: null
   DPP4: null
   IL7R: null
@@ -189,15 +197,14 @@ MAIT: !!set
   PTPRC: null
 NK: !!set
   CD244: null
-  CD38: null
   FCGR3A: null
   FCGR3B: null
+  KLRK1: null
   NCAM1: null
   NCR1: null
   NCR3: null
   PTPRC: null
 NK Proliferating: !!set
-  CD244: null
   CD38: null
   FCGR3A: null
   FCGR3B: null
@@ -218,8 +225,8 @@ Plasmablast: !!set
   CD19: null
   CD27: null
   CD38: null
-  CD86: null
   ENTPD1: null
+  ICOSLG: null
   ITGA4: null
   PTPRC: null
   TFRC: null
@@ -246,19 +253,18 @@ Treg: !!set
   TRBC1: null
   TRBC2: null
 cDC1: !!set
-  ANPEP: null
   DPP4: null
   ICOSLG: null
+  ITGA4: null
   KIT: null
   TFRC: null
   THBD: null
 cDC2: !!set
   CD1C: null
   CD1D: null
-  CLEC12A: null
   HLA-DRA: null
   HLA-DRB1: null
-  ITGAX: null
+  ITGA4: null
   SIRPA: null
   TFRC: null
 dnT: !!set
