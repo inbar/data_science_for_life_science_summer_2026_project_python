@@ -3,7 +3,9 @@ ASDC: !!set
   CD72: null
   CLEC4C: null
   IL3RA: null
+  NGFR: null
   NRP1: null
+  SIGLEC1: null
   TFRC: null
   THBD: null
 B intermediate: !!set
@@ -13,29 +15,43 @@ B intermediate: !!set
   CD22: null
   CD72: null
   CR2: null
-  IGHD: null
   MS4A1: null
-  PTPRC: null
+  MS4A3: null
+  MS4A4A: null
+  MS4A6A: null
+  MS4A7: null
+  TNFRSF13C: null
 B memory: !!set
   CCR6: null
   CD19: null
   CD22: null
   CD40: null
+  CD40LG: null
   CD72: null
   CR2: null
   MS4A1: null
+  MS4A3: null
+  MS4A4A: null
+  MS4A6A: null
+  MS4A7: null
   NT5E: null
-  PTPRC: null
+  TNFRSF13C: null
+  TRAF3: null
 B naive: !!set
   CCR6: null
   CD19: null
   CD200: null
+  CD200R1: null
+  CD200R1L: null
   CD22: null
   CD72: null
   CR2: null
-  ICOSLG: null
-  IGHD: null
   MS4A1: null
+  MS4A3: null
+  MS4A4A: null
+  MS4A6A: null
+  MS4A7: null
+  TNFRSF13C: null
 CD14 Mono: !!set
   CD14: null
   CD36: null
@@ -43,256 +59,310 @@ CD14 Mono: !!set
   CD93: null
   CLEC12A: null
   FCGR1A: null
-  ITGAM: null
-  ITGAX: null
   PVR: null
+  SCARB1: null
+  SCARB2: null
 CD16 Mono: !!set
+  ANP32A: null
+  ANP32B: null
+  CD74: null
   CD86: null
   CX3CR1: null
   FCGR3A: null
   FCGR3B: null
-  HLA-DRA: null
-  HLA-DRB1: null
+  ICAM1: null
   IL3RA: null
-  ITGA4: null
-  ITGAX: null
   PECAM1: null
-  SIRPA: null
+  SET: null
 CD4 CTL: !!set
   CD109: null
   CD2: null
-  CD3D: null
-  CD3E: null
-  CD3G: null
+  CD2AP: null
+  CD2BP2: null
   CD4: null
   ICOS: null
-  TRAC: null
-  TRBC1: null
-  TRBC2: null
+  NGFR: null
+  PSTPIP1: null
+  SH3KBP1: null
+  SLAMF7: null
+  SLAMF9: null
+  SPN: null
 CD4 Naive: !!set
   CD109: null
   CD27: null
   CD28: null
-  CD3D: null
-  CD3E: null
-  CD3G: null
   CD4: null
+  CD70: null
   ICOS: null
-  PTPRC: null
-  TRAC: null
-  TRBC1: null
-  TRBC2: null
+  SIVA1: null
+  TMIGD2: null
 CD4 Proliferating: !!set
   CD2: null
   CD28: null
+  CD2AP: null
+  CD2BP2: null
   CD38: null
   CD4: null
   ICOS: null
-  ICOSLG: null
   PDCD1: null
-  PTPRC: null
+  PSTPIP1: null
+  SH3KBP1: null
+  SLAMF7: null
+  SLAMF9: null
   TFRC: null
+  TMIGD2: null
 CD4 TCM: !!set
   CD109: null
   CD2: null
   CD28: null
-  CD3D: null
-  CD3E: null
-  CD3G: null
+  CD2AP: null
+  CD2BP2: null
   CD4: null
   ICOS: null
   IL7R: null
-  PTPRC: null
+  PSTPIP1: null
+  SH3KBP1: null
+  SLAMF7: null
+  SLAMF9: null
+  TMIGD2: null
 CD4 TEM: !!set
   CD109: null
   CD2: null
   CD28: null
-  CD3D: null
-  CD3E: null
-  CD3G: null
+  CD2AP: null
+  CD2BP2: null
   CD4: null
   CD96: null
-  DPP4: null
   IL7R: null
-  PTPRC: null
+  PSTPIP1: null
+  SH3KBP1: null
+  SLAMF7: null
+  SLAMF9: null
+  TMIGD2: null
 CD8 Naive: !!set
   CD2: null
   CD27: null
-  CD3D: null
-  CD3E: null
-  CD3G: null
+  CD2AP: null
+  CD2BP2: null
+  CD70: null
   CD8A: null
   CD8B: null
+  CD8B2: null
   KLRK1: null
   NT5E: null
-  PTPRC: null
+  PSTPIP1: null
+  SH3KBP1: null
+  SIVA1: null
+  SLAMF7: null
+  SLAMF9: null
 CD8 Proliferating: !!set
   CD2: null
-  CD3D: null
-  CD3E: null
-  CD3G: null
+  CD2AP: null
+  CD2BP2: null
   CD8A: null
   CD8B: null
+  CD8B2: null
   ICOS: null
-  ITGA4: null
   KLRK1: null
+  NGFR: null
+  PSTPIP1: null
+  SH3KBP1: null
+  SLAMF7: null
+  SLAMF9: null
+  SPN: null
 CD8 TCM: !!set
   CD2: null
   CD27: null
   CD28: null
-  CD3D: null
-  CD3E: null
-  CD3G: null
+  CD2AP: null
+  CD2BP2: null
+  CD70: null
   CD8A: null
   CD8B: null
+  CD8B2: null
   CD96: null
   IL7R: null
   KLRK1: null
-  PTPRC: null
+  PSTPIP1: null
+  SH3KBP1: null
+  SIVA1: null
+  SLAMF7: null
+  SLAMF9: null
+  TMIGD2: null
 CD8 TEM: !!set
   CD2: null
-  CD3D: null
-  CD3E: null
-  CD3G: null
+  CD2AP: null
+  CD2BP2: null
   CD81: null
   CD8A: null
   CD8B: null
+  CD8B2: null
+  IGSF8: null
   KLRK1: null
+  PSTPIP1: null
+  SH3KBP1: null
+  SLAMF7: null
+  SLAMF9: null
+  SPN: null
   TIGIT: null
-  TRAC: null
-  TRBC1: null
-  TRBC2: null
 Eryth: !!set
   CD47: null
   CD55: null
   CD59: null
+  CR1: null
+  CRLF2: null
   FAS: null
-  GYPA: null
-  GYPB: null
+  FASLG: null
+  SLC3A2: null
+  SLC7A5: null
   TFRC: null
 HSPC: !!set
   CD34: null
+  CDH2: null
   KIT: null
   MERTK: null
+  MPL: null
   NECTIN2: null
+  PVRIG: null
   TFRC: null
 ILC: !!set
   CD96: null
-  DPP4: null
   IL2RA: null
   IL7R: null
   KIT: null
   KLRB1: null
   NCR1: null
-  PTPRC: null
   TFRC: null
 MAIT: !!set
   CCR5: null
   CD2: null
   CD28: null
+  CD2AP: null
+  CD2BP2: null
   CD96: null
-  DPP4: null
   IL7R: null
   KLRB1: null
-  PTPRC: null
+  PSTPIP1: null
+  SH3KBP1: null
+  SLAMF7: null
+  SLAMF9: null
+  TMIGD2: null
 NK: !!set
   CD244: null
   FCGR3A: null
   FCGR3B: null
+  IL2RB: null
   KLRK1: null
-  NCAM1: null
   NCR1: null
   NCR3: null
-  PTPRC: null
+  SPN: null
 NK Proliferating: !!set
   CD38: null
   FCGR3A: null
   FCGR3B: null
+  IL2RB: null
   KLRK1: null
-  NCAM1: null
   NCR1: null
   NCR3: null
+  SPN: null
 NK_CD56bright: !!set
   CD2: null
   CD244: null
+  CD2AP: null
+  CD2BP2: null
+  IL2RB: null
   KIT: null
   KLRK1: null
-  NCAM1: null
   NCR1: null
   NCR3: null
-  PTPRC: null
+  PSTPIP1: null
+  SH3KBP1: null
+  SLAMF7: null
+  SLAMF9: null
 Plasmablast: !!set
   CD19: null
   CD27: null
   CD38: null
+  CD70: null
   ENTPD1: null
-  ICOSLG: null
-  ITGA4: null
-  PTPRC: null
+  ENTPD2: null
+  ENTPD3: null
+  ENTPD5: null
+  ENTPD6: null
+  SIVA1: null
+  SLC3A2: null
+  SLC7A5: null
   TFRC: null
 Platelet: !!set
   CD226: null
   CD69: null
   CD9: null
   CLEC1B: null
-  GP1BA: null
-  ITGA2: null
+  ICAM2: null
   ITGA2B: null
   ITGB3: null
+  MPL: null
+  PTGFRN: null
 Treg: !!set
   CD109: null
   CD27: null
   CD28: null
-  CD3D: null
-  CD3E: null
-  CD3G: null
   CD4: null
+  CD70: null
   ICOS: null
   IL2RA: null
-  TRAC: null
-  TRBC1: null
-  TRBC2: null
+  SIVA1: null
+  TMIGD2: null
 cDC1: !!set
-  DPP4: null
-  ICOSLG: null
-  ITGA4: null
+  CLEC9A: null
+  HAVCR2: null
+  ICAM1: null
   KIT: null
+  LY75: null
   TFRC: null
   THBD: null
 cDC2: !!set
+  ANP32A: null
+  ANP32B: null
   CD1C: null
   CD1D: null
-  HLA-DRA: null
-  HLA-DRB1: null
-  ITGA4: null
-  SIRPA: null
+  CD74: null
+  HAVCR2: null
+  LY75: null
+  NGFR: null
+  SET: null
   TFRC: null
 dnT: !!set
   CD27: null
   CD28: null
-  CD3D: null
-  CD3E: null
-  CD3G: null
+  CD70: null
   CD81: null
   ICOS: null
+  IGSF8: null
   KLRK1: null
-  PTPRC: null
+  SIVA1: null
   TIGIT: null
-  TRAC: null
-  TRBC1: null
-  TRBC2: null
+  TMIGD2: null
 gdT: !!set
   CD2: null
-  CD3D: null
-  CD3E: null
-  CD3G: null
+  CD2AP: null
+  CD2BP2: null
   CD81: null
+  IGSF8: null
   KLRB1: null
   KLRK1: null
-  PTPRC: null
+  PSTPIP1: null
+  SH3KBP1: null
+  SLAMF7: null
+  SLAMF9: null
+  SPN: null
 pDC: !!set
   CLEC4C: null
-  ICOSLG: null
+  ICAM1: null
   IL3RA: null
+  LAIR1: null
+  NGFR: null
   NRP1: null
+  SLC3A2: null
+  SLC7A5: null
   TFRC: null

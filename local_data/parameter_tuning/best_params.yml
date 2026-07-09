@@ -1,4 +1,4 @@
-batch_size: 256
-input_dropout: 0.40225505692197105
-learning_rate: 0.0005950149984821498
-weight_decay: 4.439470771743489e-06
+batch_size: 64
+input_dropout: 0.3170090441925827
+learning_rate: 0.00012102862737524723
+weight_decay: 1.531328127877509e-06
