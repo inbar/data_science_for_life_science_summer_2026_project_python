@@ -1,6 +1,6 @@
 {
  "level": "celltype.l1",
- "subsample_size": -1,
+ "subsample_size": 25000,
  "test_split_size": 40,
  "seed": 42,
  "methods": [
