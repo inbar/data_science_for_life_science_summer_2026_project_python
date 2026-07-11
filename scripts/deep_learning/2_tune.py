@@ -10,18 +10,18 @@ import logging
 from src import config
 from src import logs
 from src.deep_learning import tuning
+from src.persistence import parameter_tuning as parameter_tuning_persistence
 from src.persistence import splits as split_persistence
 from src.persistence import subsampling
 from src.preprocessing import rna as rna_preprocessing
 from src.preprocessing import splitting
-from src.persistence import parameter_tuning
 
 logs.setup_logging(__file__)
 log = logging.getLogger(__file__)
 
+SUBSAMPLE_SIZE_FOR_TUNING = 10_000
+TEST_SPLIT_SIZE_FOR_TUNING = 15
 
-SUBSAMPLE_SIZE_FOR_TUNING=10_000
-TEST_SPLIT_SIZE_FOR_TUNING=15
 
 def main(args):
     level = args.level
@@ -30,7 +30,7 @@ def main(args):
     n_trials = args.n_trials
     subsample_size = args.subsample_size
 
-    log.info(f"Running Training")
+    log.info(f"Running Tuning")
     log.info("===================")
     for k, v in vars(parsed_args).items():
         log.info(f"   {k}: {v}")
@@ -81,20 +81,24 @@ def main(args):
     rna_preprocessing.apply_scaling_to_split_data(rna_dataset_training,
                                                   rna_dataset_test)
 
+    storage = parameter_tuning_persistence.get_optuna_storage(
+        delete_if_exists=True)
+
     study = tuning.tune(
         training_data=rna_dataset_training,
         test_data=rna_dataset_test,
         labeling_df_training=target_df_training,
         labeling_df_test=target_df_test,
         n_trials=n_trials,
-        seed=seed
+        seed=seed,
+        storage=storage
     )
 
     # NOTE: root_dir must match where 1_train.py's load_best_params() looks
     # (config.LOCAL_DATA_ROOT) -- the module's own default (config.PERSISTENCE_DIR,
     # outside the repo) would silently save somewhere 1_train.py never checks.
-    parameter_tuning.save_best_params(study.best_params,
-                                      root_dir=config.LOCAL_DATA_ROOT)
+    parameter_tuning_persistence.save_best_params(study.best_params,
+                                                  root_dir=config.LOCAL_DATA_ROOT)
 
 
 if __name__ == "__main__":
