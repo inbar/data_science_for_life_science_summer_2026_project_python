@@ -3,6 +3,9 @@ import numpy as np
 import pandas as pd
 import sklearn
 
+import config
+from src import plotting
+
 
 def to_long_df(df: pd.DataFrame,
                ground_truth):
@@ -99,7 +102,10 @@ def prepare_plot_data(results: list[pd.DataFrame],
 
 def plot(results: list[pd.DataFrame],
          names: list[str],
-         ground_truth: dict[str, set]):
+         ground_truth: dict[str, set],
+         level=config.DEFAULT_LEVEL,
+         subsample=config.DEFAULT_SUBSAMPLE_SIZE,
+         to_save=True):
     plot_data = prepare_plot_data(results, names, ground_truth)
 
     fig, ax = plt.subplots(figsize=(5, 5))
@@ -108,7 +114,8 @@ def plot(results: list[pd.DataFrame],
                percent_cumulative,
                percent_cumulative_perfect,
                auc_rel) in plot_data.items():
-        ax.plot(percent_samples, percent_cumulative, label=f"{name} (AUC = {auc_rel:.2f})")
+        ax.plot(percent_samples, percent_cumulative,
+                label=f"{name} (AUC = {auc_rel:.2f})")
         ax.fill_between(percent_samples, percent_cumulative, alpha=0.1)
 
     # The perfect-model curve depends only on the (shared) ground truth, so it is
@@ -126,3 +133,7 @@ def plot(results: list[pd.DataFrame],
     ax.set_title('AUC_rel')
     ax.legend(loc="lower right", frameon=True)
     ax.grid(True, linestyle=':')
+
+    if to_save:
+        plotting.save(fig, "driver_recovery_metric", level=level,
+                      subsample=subsample)

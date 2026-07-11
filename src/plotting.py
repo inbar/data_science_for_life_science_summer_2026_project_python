@@ -18,6 +18,7 @@ import scanpy as sc
 from matplotlib.lines import Line2D
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401  (registers 3d projection)
 
+import config
 from config import FIGURES_DIR_PATH
 from config import METHOD_LABELS
 
@@ -27,7 +28,6 @@ PALETTE = ["#0072B2", "#D55E00", "#009E73", "#CC79A7",
 DRIVER_COLOR = "#D55E00"
 BG_COLOR = "#BBBBBB"
 
-# TODO: refactor
 
 def set_style():
     mpl.rcParams.update({
@@ -57,24 +57,37 @@ def set_style():
         "ytick.major.width": 0.8,
         "lines.linewidth": 1.2,
         "lines.markersize": 3,
-        "figure.constrained_layout.use": True,
+        "figure.constrained_layout.use": True
     })
 
 
-def get_or_create_figure_dir(name, level=None):
+def get_or_create_figure_dir(name,
+                             level=config.DEFAULT_LEVEL,
+                             subsample=config.DEFAULT_SUBSAMPLE_SIZE):
     """Directory figures are written to for ``fmt`` at the active level."""
-    dir = (FIGURES_DIR_PATH / level / name) if level else (FIGURES_DIR_PATH / name)
+
+    if subsample is config.DEFAULT_SUBSAMPLE_SIZE:
+        subsample_str = "full_dataset"
+    else:
+        subsample_str = f"subsample_{subsample_str}"
+
+    dir = (FIGURES_DIR_PATH / level / subsample_str / name) if level else (
+        FIGURES_DIR_PATH / name)
     dir.mkdir(parents=True, exist_ok=True)
     return dir
 
 
-def save(fig, name, level=None, tight=True):
+def save(fig,
+         name,
+         level=config.DEFAULT_LEVEL,
+         tight=True,
+         subsample=config.DEFAULT_SUBSAMPLE_SIZE):
     """Save as vector PDF + 600 dpi PNG (no title), into the level/format dirs set
     by :func:`set_fig_level`. ``tight=False`` keeps the figure's own margins
     (needed for 3D axes, whose z-label a tight crop drops)."""
     kw = {} if tight else {"bbox_inches": None}
-    pdf_dir = get_or_create_figure_dir("pdf", level)
-    png_dir = get_or_create_figure_dir("png", level)
+    pdf_dir = get_or_create_figure_dir("pdf", level, subsample)
+    png_dir = get_or_create_figure_dir("png", level, subsample)
     fig.savefig(pdf_dir / f"{name}.pdf", **kw)
     fig.savefig(png_dir / f"{name}.png", dpi=600, **kw)
 
@@ -86,7 +99,10 @@ def _mlabel(m: str) -> str:
 # --------------------------------------------------------------------------- #
 # Exploratory / QC
 # --------------------------------------------------------------------------- #
-def qc_violins(qc_metrics: pd.DataFrame, cols, figsize=None):
+def qc_violins(qc_metrics: pd.DataFrame, cols, figsize=None,
+               level=config.DEFAULT_LEVEL,
+               subsample=config.DEFAULT_SUBSAMPLE_SIZE,
+               to_save=True):
     """Violin+strip of QC metrics (one panel each). ``qc`` rows = cells."""
     n = len(cols)
     fig, axes = plt.subplots(1, n, figsize=figsize or (1.8 * n, 2.2))
@@ -101,35 +117,39 @@ def qc_violins(qc_metrics: pd.DataFrame, cols, figsize=None):
                    showfliers=False,
                    medianprops=dict(color="k", lw=1))
         ax.set_ylabel(col)
+
+    if to_save:
+        save(fig, "qc_violins", level=level, subsample=subsample)
+
     return fig
 
 
-def pca_variance_ratio(dataset):
-    sc.pl.pca_variance_ratio(dataset)
-
-
-def plot_embedding(dataset,
-                   obsm_key,
-                   title=None,
-                   color_by_key=None,
-                   legend_loc="right margin",
-                   figsize=(3, 3),
-                   ax=None,
-                   show=False):
-    if ax is None:
-        _, ax = plt.subplots(figsize=figsize)
-        show = True
-
-    sc.pl.embedding(dataset,
-                    basis=obsm_key,
-                    title=title,
-                    color=color_by_key,
-                    palette="inferno",
-                    size=8,
-                    legend_loc=legend_loc,
-                    legend_fontsize=8,
-                    ax=ax,
-                    show=show)
+# def pca_variance_ratio(dataset):
+#     sc.pl.pca_variance_ratio(dataset)
+#
+#
+# def plot_embedding(dataset,
+#                    obsm_key,
+#                    title=None,
+#                    color_by_key=None,
+#                    legend_loc="right margin",
+#                    figsize=(3, 3),
+#                    ax=None,
+#                    show=False):
+#     if ax is None:
+#         _, ax = plt.subplots(figsize=figsize)
+#         show = True
+#
+#     sc.pl.embedding(dataset,
+#                     basis=obsm_key,
+#                     title=title,
+#                     color=color_by_key,
+#                     palette="inferno",
+#                     size=8,
+#                     legend_loc=legend_loc,
+#                     legend_fontsize=8,
+#                     ax=ax,
+#                     show=show)
 
 
 def embedding_scatter(dataset,
@@ -141,7 +161,10 @@ def embedding_scatter(dataset,
                       figsize=(3.4, 3.0),
                       order=None,
                       legend_ncol=1,
-                      rasterized=True):
+                      rasterized=True,
+                      level=config.DEFAULT_LEVEL,
+                      subsample=config.DEFAULT_SUBSAMPLE_SIZE,
+                      to_save=True):
     """Generic 2D embedding (UMAP/PCA) coloured by a categorical label.
 
     No title; axes labelled UMAP1/UMAP2 by the caller via ``ax`` return.
@@ -167,10 +190,17 @@ def embedding_scatter(dataset,
         ax.legend(handles=handles, loc="center left",
                   bbox_to_anchor=(1.0, 0.5),
                   ncol=legend_ncol, handletextpad=0.2, labelspacing=0.25)
+
+    if to_save:
+        save(fig, "embedding_scatter", level=level, subsample=subsample)
+
     return fig, ax
 
 
-def protein_marker_validation_heatmap(dataframe):
+def protein_marker_validation_heatmap(dataframe,
+                                      level=config.DEFAULT_LEVEL,
+                                      subsample=config.DEFAULT_SUBSAMPLE_SIZE,
+                                      to_save=True):
     """Cell-type (rows) x protein (cols) heatmap for label validation."""
 
     fig, ax = plt.subplots(figsize=(6, 6))
@@ -190,13 +220,21 @@ def protein_marker_validation_heatmap(dataframe):
 
     cb = fig.colorbar(im, ax=ax, shrink=0.6, pad=0.02)
     cb.set_label("Z-score (CLR expression)")
+
+    if to_save:
+        save(fig, "protein_marker_validation_heatmap", level=level, subsample=subsample)
+
     return fig, ax
 
 
 # --------------------------------------------------------------------------- #
 # Per-method diagnostics
 # --------------------------------------------------------------------------- #
-def mlp_training_curves(history, figsize=(5.2, 2.2)):
+def mlp_training_curves(history,
+                        figsize=(5.2, 2.2),
+                        level=config.DEFAULT_LEVEL,
+                        subsample=config.DEFAULT_SUBSAMPLE_SIZE,
+                        to_save=True):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize)
     ep = range(1, len(history.train_loss) + 1)
     ax1.plot(ep, history.train_loss, color=PALETTE[0], label="train")
@@ -209,10 +247,20 @@ def mlp_training_curves(history, figsize=(5.2, 2.2)):
     ax2.axvline(history.best_epoch + 1, color="k", ls="--", lw=0.8)
     ax2.set_xlabel("epoch");
     ax2.set_ylabel("validation accuracy")
+
+    if to_save:
+        save(fig, "mlp_training_curves", level=level, subsample=subsample)
+
+
     return fig, (ax1, ax2)
 
 
-def per_class_bar(series_map: dict, xlabel="F1 score", figsize=None):
+def per_class_bar(series_map: dict,
+                  xlabel="F1 score",
+                  figsize=None,
+                  level=config.DEFAULT_LEVEL,
+                  subsample=config.DEFAULT_SUBSAMPLE_SIZE,
+                  to_save=True):
     """Grouped horizontal bars of a per-class metric for several models.
 
     ``series_map`` maps a model label -> pandas Series indexed by class. Classes
@@ -233,11 +281,20 @@ def per_class_bar(series_map: dict, xlabel="F1 score", figsize=None):
     ax.set_xlabel(xlabel);
     ax.set_xlim(0, 1)
     ax.legend(loc="lower right")
+
+    if to_save:
+        save(fig, "per_class_bar", level=level, subsample=subsample)
+
     return fig, ax
 
 
-def confusion_heatmap(cm: np.ndarray, classes, figsize=None,
-                      normalize=True):
+def confusion_heatmap(cm: np.ndarray,
+                      classes,
+                      figsize=None,
+                      normalize=True,
+                      level=config.DEFAULT_LEVEL,
+                      subsample=config.DEFAULT_SUBSAMPLE_SIZE,
+                      to_save=True):
     """Row-normalised confusion matrix heatmap (true = rows, predicted = cols)."""
     M = cm.astype(float)
     if normalize:
@@ -253,36 +310,45 @@ def confusion_heatmap(cm: np.ndarray, classes, figsize=None,
     ax.set_ylabel("true")
     cb = fig.colorbar(im, ax=ax, shrink=0.6, pad=0.02);
     cb.set_label("fraction")
+
+    if to_save:
+        save(fig, "confusion_heatmap", level=level, subsample=subsample)
+
     return fig, ax
 
 
-def score_hist(values, xlabel, figsize=(3.0, 2.2), bins=50, color=None):
-    fig, ax = plt.subplots(figsize=figsize)
-    ax.hist(np.asarray(values), bins=bins, color=color or PALETTE[0],
-            alpha=0.85)
-    ax.set_xlabel(xlabel);
-    ax.set_ylabel("genes")
+# def score_hist(values, xlabel, figsize=(3.0, 2.2), bins=50, color=None):
+#     fig, ax = plt.subplots(figsize=figsize)
+#     ax.hist(np.asarray(values), bins=bins, color=color or PALETTE[0],
+#             alpha=0.85)
+#     ax.set_xlabel(xlabel);
+#     ax.set_ylabel("genes")
     return fig, ax
 
 
-def eigen_spectrum(eigs_raw, eigs_shrunk, figsize=(3.2, 2.4)):
-    """Covariance eigenvalue spectra: raw vs Ledoit-Wolf shrinkage (log y)."""
-    fig, ax = plt.subplots(figsize=figsize)
-    ax.plot(np.sort(eigs_raw)[::-1], color=PALETTE[1], label="empirical")
-    ax.plot(np.sort(eigs_shrunk)[::-1], color=PALETTE[0],
-            label="Ledoit-Wolf")
-    ax.set_yscale("log")
-    ax.set_xlabel("eigenvalue rank");
-    ax.set_ylabel("eigenvalue")
-    ax.legend()
-    return fig, ax
+# def eigen_spectrum(eigs_raw, eigs_shrunk, figsize=(3.2, 2.4)):
+#     """Covariance eigenvalue spectra: raw vs Ledoit-Wolf shrinkage (log y)."""
+#     fig, ax = plt.subplots(figsize=figsize)
+#     ax.plot(np.sort(eigs_raw)[::-1], color=PALETTE[1], label="empirical")
+#     ax.plot(np.sort(eigs_shrunk)[::-1], color=PALETTE[0],
+#             label="Ledoit-Wolf")
+#     ax.set_yscale("log")
+#     ax.set_xlabel("eigenvalue rank");
+#     ax.set_ylabel("eigenvalue")
+#     ax.legend()
+#     return fig, ax
 
 
 # --------------------------------------------------------------------------- #
 # Benchmark results
 # --------------------------------------------------------------------------- #
-def auc_box(df: pd.DataFrame, method_order, sig_pairs=None,
-            figsize=(3.6, 2.8)):
+def auc_box(df: pd.DataFrame,
+            method_order,
+            sig_pairs=None,
+            figsize=(3.6, 2.8),
+            level=config.DEFAULT_LEVEL,
+            subsample=config.DEFAULT_SUBSAMPLE_SIZE,
+            to_save=True):
     """Box + strip of AUC_rel per method (one point per cell type)."""
     fig, ax = plt.subplots(figsize=figsize)
     data = [df.loc[df.method == m, "auc_rel"].dropna().values for m in
@@ -306,6 +372,11 @@ def auc_box(df: pd.DataFrame, method_order, sig_pairs=None,
 
     if sig_pairs:
         _annotate_sig(ax, method_order, sig_pairs, data)
+
+
+    if to_save:
+        save(fig, "auc_box", level=level, subsample=subsample)
+
     return fig, ax
 
 
@@ -347,9 +418,15 @@ def recovery_curves(curves: dict, figsize=(3.2, 2.8)):
     return fig, ax
 
 
-def recovery_at_k_curve(df: pd.DataFrame, methods, exclude=None,
+def recovery_at_k_curve(df: pd.DataFrame,
+                        methods,
+                        exclude=None,
                         n_boot=2000,
-                        seed=0, figsize=(3.4, 2.8)):
+                        seed=0,
+                        figsize=(3.4, 2.8),
+                        level=config.DEFAULT_LEVEL,
+                        subsample=config.DEFAULT_SUBSAMPLE_SIZE,
+                        to_save=True):
     """Mean recall@k vs k per method, with a bootstrap-over-cell-types CI band.
 
     ``df`` is the tidy [celltype, method, k, recovery] table. Cell type is the
@@ -376,10 +453,20 @@ def recovery_at_k_curve(df: pd.DataFrame, methods, exclude=None,
     ax.set_xlabel("top-k genes");
     ax.set_ylabel("fraction of drivers recovered")
     ax.legend(loc="upper left")
+
+    if to_save:
+        save(fig, "recovery_at_k_curve", level=level, subsample=subsample)
+
     return fig, ax
 
 
-def recovery_curves_panel(panel: dict, ncols=4, xlim=None, figsize=None):
+def recovery_curves_panel(panel: dict,
+                          ncols=4,
+                          xlim=None,
+                          figsize=None,
+                          level=config.DEFAULT_LEVEL,
+                          subsample=config.DEFAULT_SUBSAMPLE_SIZE,
+                          to_save=True):
     """Grid of cumulative recovery curves, one panel per cell type.
 
     ``panel`` maps a cell-type label -> {method: (frac_genes, frac_recovered)}.
@@ -407,46 +494,55 @@ def recovery_curves_panel(panel: dict, ncols=4, xlim=None, figsize=None):
     for r in range(nrows):
         axes[r * ncols].set_ylabel("drivers recovered")
     axes[ncols - 1].legend(loc="lower right", fontsize=5.5)
+
+    if to_save:
+        save(fig, "recovery_curves_panel", level=level, subsample=subsample)
+
     return fig, axes
 
 
-def recovery_curve_mean(store: dict, methods, exclude=None, n_boot=2000,
-                        seed=0, xmax=1.0, figsize=(3.4, 2.8)):
-    """Cumulative recovery curve **averaged over cell types** (bootstrap-over-cell
-    -type band). x is the fraction of all ranked genes; ``xmax`` < 1 zooms into the
-    early region. ``store`` is the per-cell-type score dict from the benchmark."""
-    from .metric import recovery_curve
-    cts = [c for c in store if not (exclude and c in exclude)]
-    rng = np.random.default_rng(seed)
-    fig, ax = plt.subplots(figsize=figsize)
-    x_ref = None
-    for i, m in enumerate(methods):
-        ys = []
-        for ct in cts:
-            if m not in store[ct]:
-                continue
-            x, y = recovery_curve(store[ct][m], store[ct]["_driver_mask"])
-            ys.append(y);
-            x_ref = x
-        Y = np.vstack(ys)  # (cell types x genes)
-        mean = Y.mean(0)
-        boot = np.array([Y[rng.integers(0, Y.shape[0], Y.shape[0])].mean(0)
-                         for _ in range(n_boot)])
-        lo, hi = np.percentile(boot, [2.5, 97.5], axis=0)
-        ax.plot(x_ref, mean, color=PALETTE[i % len(PALETTE)],
-                label=_mlabel(m))
-        ax.fill_between(x_ref, lo, hi, color=PALETTE[i % len(PALETTE)],
-                        alpha=0.16, linewidth=0)
-    if xmax >= 1.0:
-        ax.plot([0, 1], [0, 1], color="grey", ls=":", lw=0.8)
-    ax.set_xlim(0, xmax)
-    ax.set_xlabel("fraction of ranked genes")
-    ax.set_ylabel("fraction of drivers recovered")
-    ax.legend(loc="lower right")
-    return fig, ax
+# def recovery_curve_mean(store: dict, methods, exclude=None, n_boot=2000,
+#                         seed=0, xmax=1.0, figsize=(3.4, 2.8)):
+#     """Cumulative recovery curve **averaged over cell types** (bootstrap-over-cell
+#     -type band). x is the fraction of all ranked genes; ``xmax`` < 1 zooms into the
+#     early region. ``store`` is the per-cell-type score dict from the benchmark."""
+#     from .metric import recovery_curve
+#     cts = [c for c in store if not (exclude and c in exclude)]
+#     rng = np.random.default_rng(seed)
+#     fig, ax = plt.subplots(figsize=figsize)
+#     x_ref = None
+#     for i, m in enumerate(methods):
+#         ys = []
+#         for ct in cts:
+#             if m not in store[ct]:
+#                 continue
+#             x, y = recovery_curve(store[ct][m], store[ct]["_driver_mask"])
+#             ys.append(y);
+#             x_ref = x
+#         Y = np.vstack(ys)  # (cell types x genes)
+#         mean = Y.mean(0)
+#         boot = np.array([Y[rng.integers(0, Y.shape[0], Y.shape[0])].mean(0)
+#                          for _ in range(n_boot)])
+#         lo, hi = np.percentile(boot, [2.5, 97.5], axis=0)
+#         ax.plot(x_ref, mean, color=PALETTE[i % len(PALETTE)],
+#                 label=_mlabel(m))
+#         ax.fill_between(x_ref, lo, hi, color=PALETTE[i % len(PALETTE)],
+#                         alpha=0.16, linewidth=0)
+#     if xmax >= 1.0:
+#         ax.plot([0, 1], [0, 1], color="grey", ls=":", lw=0.8)
+#     ax.set_xlim(0, xmax)
+#     ax.set_xlabel("fraction of ranked genes")
+#     ax.set_ylabel("fraction of drivers recovered")
+#     ax.legend(loc="lower right")
+#     return fig, ax
 
 
-def auc_heatmap(wide: pd.DataFrame, method_order=None, figsize=None):
+def auc_heatmap(wide: pd.DataFrame,
+                method_order=None,
+                figsize=None,
+                level=config.DEFAULT_LEVEL,
+                subsample=config.DEFAULT_SUBSAMPLE_SIZE,
+                to_save=True):
     """Cell-type (rows) x method (cols) AUC_rel heatmap."""
     cols = method_order or list(wide.columns)
     w = wide[cols]
@@ -460,14 +556,24 @@ def auc_heatmap(wide: pd.DataFrame, method_order=None, figsize=None):
     ax.set_yticklabels(w.index)
     cb = fig.colorbar(im, ax=ax, shrink=0.6, pad=0.02)
     cb.set_label(r"AUC$_{\mathrm{rel}}$")
+
+    if to_save:
+        save(fig, "auc_heatmap", level=level, subsample=subsample)
+
     return fig, ax
 
 
 # --------------------------------------------------------------------------- #
 # Cross-method comparison (gene-level)
 # --------------------------------------------------------------------------- #
-def pairwise_scatter_matrix(long: pd.DataFrame, methods, figsize=(6.4, 6.4),
-                            s=3, point_alpha=0.4):
+def pairwise_scatter_matrix(long: pd.DataFrame,
+                            methods,
+                            figsize=(6.4, 6.4),
+                            s=3,
+                            point_alpha=0.4,
+                            level=config.DEFAULT_LEVEL,
+                            subsample=config.DEFAULT_SUBSAMPLE_SIZE,
+                            to_save=True):
     """Lower-triangle scatter matrix of per-gene method scores.
 
     ``long`` has one row per (gene, cell type) with a column per method and a
@@ -511,12 +617,24 @@ def pairwise_scatter_matrix(long: pd.DataFrame, methods, figsize=(6.4, 6.4),
                       markerfacecolor=BG_COLOR, markeredgecolor="none",
                       label="other gene")]
     fig.legend(handles=handles, loc="upper right", ncol=1)
+
+    if to_save:
+        save(fig, "pairwise_scatter_matrix", level=level, subsample=subsample)
+
     return fig, axes
 
 
-def scatter3d(long: pd.DataFrame, x, y, z, elev=22, azim=-60,
+def scatter3d(long: pd.DataFrame,
+              x,
+              y,
+              z,
+              elev=22,
+              azim=-60,
               figsize=(5.6, 4.2),
-              s=4):
+              s=4,
+              level=config.DEFAULT_LEVEL,
+              subsample=config.DEFAULT_SUBSAMPLE_SIZE,
+              to_save=True):
     """3D scatter of three method scores, drivers highlighted."""
     drv = long["is_driver"].values
     # constrained_layout does not support 3D axes well and clips the z-label;
@@ -548,4 +666,8 @@ def scatter3d(long: pd.DataFrame, x, y, z, elev=22, azim=-60,
                       markerfacecolor=BG_COLOR, markeredgecolor="none",
                       label="other gene")]
     ax.legend(handles=handles, loc="upper left")
+
+    if to_save:
+        save(fig, "scatter3d", level=level, subsample=subsample)
+
     return fig, ax
