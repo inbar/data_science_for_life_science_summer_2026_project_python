@@ -62,6 +62,7 @@ DEFAULT_TAG = ""
 
 # Hyperparameter tuning
 N_TRIALS=50
+DEFAULT_STUDY_NAME = "tune_mlp_hyperparameters"
 
 # Method labels
 

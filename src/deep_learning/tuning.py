@@ -2,7 +2,8 @@ import optuna
 import pandas as pd
 import torch
 from anndata import AnnData
-from optuna import Study
+from optuna import Study, storages
+from optuna.storages import BaseStorage
 from sklearn.metrics import f1_score
 
 from src import config
@@ -82,13 +83,16 @@ def tune(training_data: AnnData,
          labeling_df_training: pd.DataFrame,
          labeling_df_test: pd.DataFrame,
          n_trials:int = config.N_TRIALS,
-         seed: int = config.DEFAULT_SEED) -> Study:
+         seed: int = config.DEFAULT_SEED,
+         storage: BaseStorage | None = None) -> Study:
     # NOTE: previously unseeded -- which hyperparameters got tried (TPESampler's
     # own search order) and each trial's model init/shuffling were both governed
     # by ambient RNG state, so re-running tuning with "the same" --seed could
     # (and did) land on a different best_params.yml every time.
     study = optuna.create_study(direction="maximize",
-                                sampler=optuna.samplers.TPESampler(seed=seed))
+                                study_name=config.DEFAULT_STUDY_NAME,
+                                sampler=optuna.samplers.TPESampler(seed=seed),
+                                storage=storage)
 
     objective_function = get_objective_function(
         training_data=training_data,
