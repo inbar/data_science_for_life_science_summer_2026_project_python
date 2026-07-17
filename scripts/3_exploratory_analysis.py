@@ -36,6 +36,7 @@ from src.exploratory_analysis import dim_reduction
 from src.persistence import datasets as dataset_persistence
 from src.preprocessing import adt as adt_preprocessing
 from src.preprocessing import rna as rna_preprocessing
+from src.persistence import path_tools
 
 warnings.simplefilter("ignore", category=PerformanceWarning)
 warnings.simplefilter("ignore", category=ImplicitModificationWarning)
@@ -56,17 +57,6 @@ def _dense(x):
     return np.asarray(x.todense()) if sp.issparse(x) else np.asarray(x)
 
 
-def get_output_dir(subsample_size, level, seed, root_dir):
-    # Depends only on (level, subsample_size, seed) -- there is no train/test
-    # split yet at this stage, so this deliberately does not use
-    # persistence.path_tools's split-aware naming.
-    subdir = dataset_persistence.SUBSAMPLE_DATASET_SUBDIR_TEMPLATE.format(
-        subsample_size=subsample_size, seed=seed)
-    output_dir = root_dir / "exploratory" / level / subdir
-    output_dir.mkdir(parents=True, exist_ok=True)
-    return output_dir
-
-
 def main(args):
     level = args.level
     subsample_size = args.subsample_size
@@ -79,7 +69,7 @@ def main(args):
         log.info(f"   {k}: {v}")
     log.info("")
 
-    output_dir = get_output_dir(subsample_size, level, seed, root_dir)
+    output_dir = path_tools.get_exploratory_output_dir(subsample_size, level, seed, root_dir)
 
     dataset = dataset_persistence.load_or_create_subsample(
         subsample_size=subsample_size, level=level, seed=seed)

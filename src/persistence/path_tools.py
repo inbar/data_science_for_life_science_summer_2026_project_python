@@ -32,3 +32,19 @@ def get_subfolder_path(subsample_size: int = config.DEFAULT_SUBSAMPLE_SIZE,
     file_path = Path(level) / f"{subdir_prefix}_{subdir}{tag_suffix}"
 
     return file_path
+
+def get_exploratory_output_dir(subsample_size, level, seed, root_dir):
+    # Depends only on (level, subsample_size, seed) -- there is no train/test
+    # split yet at this stage, so this deliberately does not use
+    # persistence.path_tools's split-aware naming.
+
+    if subsample_size is config.DEFAULT_SUBSAMPLE_SIZE:
+        subsample_str = "full_dataset"
+    else:
+        subsample_str = f"subsample_{subsample_size}"
+
+
+    subdir = f"{subsample_str}_seed_{seed}"
+    output_dir = root_dir / "exploratory" / level / subdir
+    output_dir.mkdir(parents=True, exist_ok=True)
+    return output_dir

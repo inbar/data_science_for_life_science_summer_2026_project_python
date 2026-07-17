@@ -31,10 +31,6 @@ BG_COLOR = "#BBBBBB"
 
 def set_style():
     mpl.rcParams.update({
-        # NOTE: Jupyter's inline display uses "figure.dpi" (not "savefig.dpi") to
-        # render a Figure returned from a cell. Keeping it equal to "savefig.dpi"
-        # means what you see inline is the same resolution as what P.save() writes
-        # to disk (>= 3840 px wide / true "4K" width for the 6.4in-wide panels).
         "figure.dpi": 600,
         "savefig.dpi": 600,
         "savefig.bbox": "tight",
@@ -69,7 +65,7 @@ def get_or_create_figure_dir(name,
     if subsample is config.DEFAULT_SUBSAMPLE_SIZE:
         subsample_str = "full_dataset"
     else:
-        subsample_str = f"subsample_{subsample_str}"
+        subsample_str = f"subsample_{subsample}"
 
     dir = (FIGURES_DIR_PATH / level / subsample_str / name) if level else (
         FIGURES_DIR_PATH / name)
@@ -81,13 +77,17 @@ def save(fig,
          name,
          level=config.DEFAULT_LEVEL,
          tight=True,
-         subsample=config.DEFAULT_SUBSAMPLE_SIZE):
+         subsample=config.DEFAULT_SUBSAMPLE_SIZE,
+         tag=None):
     """Save as vector PDF + 600 dpi PNG (no title), into the level/format dirs set
     by :func:`set_fig_level`. ``tight=False`` keeps the figure's own margins
     (needed for 3D axes, whose z-label a tight crop drops)."""
     kw = {} if tight else {"bbox_inches": None}
     pdf_dir = get_or_create_figure_dir("pdf", level, subsample)
     png_dir = get_or_create_figure_dir("png", level, subsample)
+
+    name = name if tag is None else f"{name}_{tag}"
+
     fig.savefig(pdf_dir / f"{name}.pdf", **kw)
     fig.savefig(png_dir / f"{name}.png", dpi=600, **kw)
 
@@ -164,23 +164,26 @@ def embedding_scatter(dataset,
                       rasterized=True,
                       level=config.DEFAULT_LEVEL,
                       subsample=config.DEFAULT_SUBSAMPLE_SIZE,
-                      to_save=True):
+                      to_save=True,
+                      tag=None):
     """Generic 2D embedding (UMAP/PCA) coloured by a categorical label.
 
     No title; axes labelled UMAP1/UMAP2 by the caller via ``ax`` return.
     """
+
     labels = np.asarray(labels).astype(str)
     cats = order if order is not None else sorted(pd.unique(labels))
     pal = palette or {c: PALETTE[i % len(PALETTE)] for i, c in
                       enumerate(cats)}
-    fig, ax = plt.subplots(figsize=figsize)
+    fig, ax = plt.subplots(figsize=figsize, layout=None)
+    plt.tight_layout()
     for c in cats:
         m = labels == c
         ax.scatter(dataset[m, 0], dataset[m, 1], s=s, alpha=alpha,
                    c=pal[c], label=c, linewidths=0, rasterized=rasterized)
-    ax.set_xticks([]);
+    ax.set_xticks([])
     ax.set_yticks([])
-    ax.set_xlabel("UMAP 1");
+    ax.set_xlabel("UMAP 1")
     ax.set_ylabel("UMAP 2")
     if legend:
         handles = [Line2D([0], [0], marker="o", linestyle="", markersize=4,
@@ -192,7 +195,8 @@ def embedding_scatter(dataset,
                   ncol=legend_ncol, handletextpad=0.2, labelspacing=0.25)
 
     if to_save:
-        save(fig, "embedding_scatter", level=level, subsample=subsample)
+        save(fig, "embedding_scatter", level=level, subsample=subsample,
+             tag=tag)
 
     return fig, ax
 
@@ -222,7 +226,8 @@ def protein_marker_validation_heatmap(dataframe,
     cb.set_label("Z-score (CLR expression)")
 
     if to_save:
-        save(fig, "protein_marker_validation_heatmap", level=level, subsample=subsample)
+        save(fig, "protein_marker_validation_heatmap", level=level,
+             subsample=subsample)
 
     return fig, ax
 
@@ -241,16 +246,15 @@ def mlp_training_curves(history,
     ax1.plot(ep, history.val_loss, color=PALETTE[1], label="validation")
     ax1.axvline(history.best_epoch + 1, color="k", ls="--", lw=0.8)
     ax1.set_xlabel("epoch");
-    ax1.set_ylabel("cross-entropy loss");
+    ax1.set_ylabel("cross-entropy loss")
     ax1.legend()
     ax2.plot(ep, history.val_acc, color=PALETTE[2])
     ax2.axvline(history.best_epoch + 1, color="k", ls="--", lw=0.8)
-    ax2.set_xlabel("epoch");
+    ax2.set_xlabel("epoch")
     ax2.set_ylabel("validation accuracy")
 
     if to_save:
         save(fig, "mlp_training_curves", level=level, subsample=subsample)
-
 
     return fig, (ax1, ax2)
 
@@ -278,7 +282,7 @@ def per_class_bar(series_map: dict,
                 label=lab, edgecolor="none")
     ax.set_yticks(y + h * (len(labels) - 1) / 2)
     ax.set_yticklabels(classes)
-    ax.set_xlabel(xlabel);
+    ax.set_xlabel(xlabel)
     ax.set_xlim(0, 1)
     ax.legend(loc="lower right")
 
@@ -302,13 +306,13 @@ def confusion_heatmap(cm: np.ndarray,
     fig, ax = plt.subplots(figsize=figsize or (0.28 * len(classes) + 1.8,
                                                0.28 * len(classes) + 1.5))
     im = ax.imshow(M, cmap="magma_r", vmin=0, vmax=1)
-    ax.set_xticks(range(len(classes)));
+    ax.set_xticks(range(len(classes)))
     ax.set_xticklabels(classes, rotation=90)
-    ax.set_yticks(range(len(classes)));
+    ax.set_yticks(range(len(classes)))
     ax.set_yticklabels(classes)
-    ax.set_xlabel("predicted");
+    ax.set_xlabel("predicted")
     ax.set_ylabel("true")
-    cb = fig.colorbar(im, ax=ax, shrink=0.6, pad=0.02);
+    cb = fig.colorbar(im, ax=ax, shrink=0.6, pad=0.02)
     cb.set_label("fraction")
 
     if to_save:
@@ -316,13 +320,12 @@ def confusion_heatmap(cm: np.ndarray,
 
     return fig, ax
 
-
-# def score_hist(values, xlabel, figsize=(3.0, 2.2), bins=50, color=None):
-#     fig, ax = plt.subplots(figsize=figsize)
-#     ax.hist(np.asarray(values), bins=bins, color=color or PALETTE[0],
-#             alpha=0.85)
-#     ax.set_xlabel(xlabel);
-#     ax.set_ylabel("genes")
+    # def score_hist(values, xlabel, figsize=(3.0, 2.2), bins=50, color=None):
+    #     fig, ax = plt.subplots(figsize=figsize)
+    #     ax.hist(np.asarray(values), bins=bins, color=color or PALETTE[0],
+    #             alpha=0.85)
+    #     ax.set_xlabel(xlabel)
+    #     ax.set_ylabel("genes")
     return fig, ax
 
 
@@ -333,7 +336,7 @@ def confusion_heatmap(cm: np.ndarray,
 #     ax.plot(np.sort(eigs_shrunk)[::-1], color=PALETTE[0],
 #             label="Ledoit-Wolf")
 #     ax.set_yscale("log")
-#     ax.set_xlabel("eigenvalue rank");
+#     ax.set_xlabel("eigenvalue rank")
 #     ax.set_ylabel("eigenvalue")
 #     ax.legend()
 #     return fig, ax
@@ -356,7 +359,7 @@ def auc_box(df: pd.DataFrame,
     bp = ax.boxplot(data, widths=0.6, showfliers=False, patch_artist=True,
                     medianprops=dict(color="k", lw=1))
     for i, box in enumerate(bp["boxes"]):
-        box.set_facecolor(PALETTE[i % len(PALETTE)]);
+        box.set_facecolor(PALETTE[i % len(PALETTE)])
         box.set_alpha(0.35)
         box.set_edgecolor("k")
     rng = np.random.default_rng(0)
@@ -372,7 +375,6 @@ def auc_box(df: pd.DataFrame,
 
     if sig_pairs:
         _annotate_sig(ax, method_order, sig_pairs, data)
-
 
     if to_save:
         save(fig, "auc_box", level=level, subsample=subsample)
@@ -450,7 +452,7 @@ def recovery_at_k_curve(df: pd.DataFrame,
         ax.fill_between(ks, lo, hi, color=PALETTE[i % len(PALETTE)],
                         alpha=0.16,
                         linewidth=0)
-    ax.set_xlabel("top-k genes");
+    ax.set_xlabel("top-k genes")
     ax.set_ylabel("fraction of drivers recovered")
     ax.legend(loc="upper left")
 
@@ -517,7 +519,7 @@ def recovery_curves_panel(panel: dict,
 #             if m not in store[ct]:
 #                 continue
 #             x, y = recovery_curve(store[ct][m], store[ct]["_driver_mask"])
-#             ys.append(y);
+#             ys.append(y)
 #             x_ref = x
 #         Y = np.vstack(ys)  # (cell types x genes)
 #         mean = Y.mean(0)
@@ -552,7 +554,7 @@ def auc_heatmap(wide: pd.DataFrame,
                    vmax=1.0)
     ax.set_xticks(range(len(cols)))
     ax.set_xticklabels([_mlabel(m) for m in cols], rotation=25, ha="right")
-    ax.set_yticks(range(w.shape[0]));
+    ax.set_yticks(range(w.shape[0]))
     ax.set_yticklabels(w.index)
     cb = fig.colorbar(im, ax=ax, shrink=0.6, pad=0.02)
     cb.set_label(r"AUC$_{\mathrm{rel}}$")
@@ -602,7 +604,7 @@ def pairwise_scatter_matrix(long: pd.DataFrame,
                 ax.text(0.5, 0.5, f"ρ = {rho:.2f}", ha="center",
                         va="center",
                         transform=ax.transAxes, fontsize=8)
-                ax.set_xticks([]);
+                ax.set_xticks([])
                 ax.set_yticks([])
             if i == k - 1:
                 ax.set_xlabel(_mlabel(mj), fontsize=6)
