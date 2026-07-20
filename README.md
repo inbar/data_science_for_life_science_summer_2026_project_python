@@ -40,7 +40,7 @@ cell type, keeping the evaluation a genuine cross-modal test.
 ├── notebooks/                 # Exploratory analysis and figure drafting
 ├── local_data/                # All results and small generated data to be committed to the repo
 │
-├── environment.yml            # Conda environment definition
+└── environment.yml            # Conda environment definition
 ```
 
 ## Run locally 
