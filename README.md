@@ -41,6 +41,7 @@ cell type, keeping the evaluation a genuine cross-modal test.
 ├── local_data/                # All results and small generated data to be committed to the repo
 │
 ├── environment.yml            # Conda environment definition
+```
 
 ## Run locally 
 
