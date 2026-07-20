@@ -16,7 +16,7 @@ cd scripts/deep_learning
 
 ###
 # Run:
-# $ sbatch 101_train_mlp_model.sh --export=ALL,TAG=some_tag
+# $ sbatch 101_train_mlp_model.sh
 
 LEVEL="${LEVEL:="celltype.l2"}"
 TEST_SPLIT_SIZE="${TEST_SPLIT_SIZE:=40}"
@@ -24,9 +24,10 @@ SEED="${SEED:=42}"
 TAG="${TAG:=''}"
 N_EPOCHS="${N_EPOCHS:=15}"
 
-echo "Starting scoring task"
+echo "Starting training task"
 echo "====================="
 echo "  Params:"
+echo "    SUBSAMPLE_SIZE: ${SUBSAMPLE_SIZE}"
 echo "    LEVEL: ${LEVEL}"
 echo "    TEST_SPLIT_SIZE: ${TEST_SPLIT_SIZE}"
 echo "    SEED: ${SEED}"
@@ -34,6 +35,7 @@ echo "    N_EPOCHS: ${N_EPOCHS}"
 echo "    TAG: ${TAG}"
 
 srun ./1_train.py \
+            --subsample_size $SUBSAMPLE_SIZE \
              --level $LEVEL \
              --test_split_size $TEST_SPLIT_SIZE \
              --seed $SEED \
