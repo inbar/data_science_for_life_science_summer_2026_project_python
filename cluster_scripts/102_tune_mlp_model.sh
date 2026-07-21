@@ -14,6 +14,10 @@ USER=$(whoami)
 source setup_environment.sh
 cd scripts/deep_learning
 
+###
+# Run:
+# $ sbatch 102_tune_mlp_model.sh
+
 LEVEL="${LEVEL:="celltype.l2"}"
 TEST_SPLIT_SIZE="${TEST_SPLIT_SIZE:=40}"
 SEED="${SEED:=42}"
