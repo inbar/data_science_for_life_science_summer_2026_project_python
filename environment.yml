@@ -32,4 +32,6 @@ dependencies:
       - mudata
       - captum
       - harmonypy==0.0.9
+      - gprofiler-official
+
 

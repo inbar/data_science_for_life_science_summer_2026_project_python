@@ -8,6 +8,7 @@ The notebook only ever calls these one-liners; all layout logic lives here.
 """
 from __future__ import annotations
 
+import textwrap
 from itertools import combinations
 
 import matplotlib as mpl
@@ -671,5 +672,70 @@ def scatter3d(long: pd.DataFrame,
 
     if to_save:
         save(fig, "scatter3d", level=level, subsample=subsample)
+
+    return fig, ax
+
+
+# --------------------------------------------------------------------------- #
+# Functional annotation (GO enrichment)
+# --------------------------------------------------------------------------- #
+def go_term_bars(result_df: pd.DataFrame,
+                 label: str,
+                 top_k=10,
+                 max_term_size=300,
+                 figsize=None,
+                 level=config.DEFAULT_LEVEL,
+                 subsample=config.DEFAULT_SUBSAMPLE_SIZE,
+                 to_save=True,
+                 tag=None):
+    """Horizontal bar chart of the top-k GO:BP terms by p-value.
+
+    ``result_df`` is a single (method-or-axis, cell type) slice of one of
+    the tidy tables from
+    ``src.persistence.annotation_results.load_annotation_results`` (e.g.
+    ``enrichment_full[(enrichment_full.method == "ig_mlp") &
+    (enrichment_full.celltype == ct)]``) -- filtering happens in the caller,
+    same convention as :func:`pairwise_scatter_matrix` and
+    :func:`auc_heatmap`.
+
+    ``label`` (e.g. ``"ig_mlp \u2013 CD4 T"`` or ``"nonlinear_specific \u2013 CD4
+    T"``) is annotated inside the panel rather than as a title, per house
+    style; also used to build the save tag if ``tag`` is not given.
+
+    ``max_term_size`` drops overly generic GO terms (e.g. "developmental
+    process") whose ``term_size`` exceeds this many annotated genes; set to
+    None to disable.
+    """
+    if result_df is None or result_df.empty:
+        return None, None
+
+    df = result_df.copy()
+    if max_term_size is not None and "term_size" in df.columns:
+        df = df[df["term_size"] <= max_term_size]
+        if df.empty:
+            return None, None
+
+    top = df.nsmallest(top_k, "p_value").copy()
+    top["neg_log_p"] = top["p_value"].apply(
+        lambda p: -np.log10(p) if p > 0 else 0)
+    wrapped_labels = [textwrap.fill(name, width=40) for name in top["name"]]
+
+    fig, ax = plt.subplots(figsize=figsize or (4.4, 0.32 * top_k + 0.8))
+    bars = ax.barh(wrapped_labels, top["neg_log_p"], color=PALETTE[0])
+    ax.set_xlabel(r"$-\log_{10}(p\mathrm{-value})$")
+    ax.invert_yaxis()
+    ax.text(0.02, 0.98, label, transform=ax.transAxes, va="top", ha="left",
+            fontsize=6.5, fontweight="bold")
+
+    if "intersection_size" in top.columns:
+        for bar, n_genes in zip(bars, top["intersection_size"]):
+            ax.text(bar.get_width() + 0.02 * top["neg_log_p"].max(),
+                    bar.get_y() + bar.get_height() / 2, f"n={int(n_genes)}",
+                    va="center", ha="left", fontsize=6)
+        ax.set_xlim(0, top["neg_log_p"].max() * 1.25)
+
+    if to_save:
+        save(fig, "go_term_bars", level=level, subsample=subsample,
+             tag=tag or label)
 
     return fig, ax
