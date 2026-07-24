@@ -78,7 +78,7 @@ CELL_TYPE_TO_MARKER_PROTEIN = {
     'pDC': 'CD123'
 }
 
-# TODO: Generate this mapping (instead of having it hard coded)
+# The Groundtrtuh was generated via a UNIPROT Query and is hardcoded to save time while running the Scripts. You can find the code for the Mapping in the "creating_groundtruth_via_ADT.ipynb" Notebook.
 PROTEIN_TO_GENES: dict[str, list[str]] = {'CD39': ['ENTPD1', 'ENTPD6', 'ENTPD2', 'ENTPD3', 'ENTPD5'],
  'CD107a': ['LAMP1'],
  'CD62P': ['SELP'],
