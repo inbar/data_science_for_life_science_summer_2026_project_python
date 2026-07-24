@@ -16,16 +16,6 @@ called markers, and which axis matters more? All four methods see **RNA only**; 
 protein modality is used solely to define the ground-truth driver set `D_c` per
 cell type, keeping the evaluation a genuine cross-modal test.
 
-## Quick links
-
-* **Overleaf**
-  * https://www.overleaf.com/project/6a16a6acee7a4f9be406ed56
-
-* **Drive**  
-  * [Drive Folder](https://drive.google.com/drive/folders/1EbHnfwc--__TVGd0T7sYfsFyHT2DoH8q)  
-    * ➡️ [Pitch slides](https://docs.google.com/presentation/d/1NsWcmVj_nGgPXwznGEQuIt0szK6gWpAv6AhVMVyTu64)  
-    * ➡️ [Project presentation slides](https://docs.google.com/presentation/d/1XC8spsQxBdkZpUi3c1FwNNoBYlBeGhgpELGiPLkxLGU)  
-
 ## Repository Structure
 
 ```text
@@ -42,6 +32,37 @@ cell type, keeping the evaluation a genuine cross-modal test.
 │
 └── environment.yml            # Conda environment definition
 ```
+
+## Quick links
+
+* **Overleaf**
+  * https://www.overleaf.com/project/6a16a6acee7a4f9be406ed56
+
+* **Drive**  
+  * [Drive Folder](https://drive.google.com/drive/folders/1EbHnfwc--__TVGd0T7sYfsFyHT2DoH8q)  
+    * ➡️ [Pitch slides](https://docs.google.com/presentation/d/1NsWcmVj_nGgPXwznGEQuIt0szK6gWpAv6AhVMVyTu64)  
+    * ➡️ [Project presentation slides](https://docs.google.com/presentation/d/1XC8spsQxBdkZpUi3c1FwNNoBYlBeGhgpELGiPLkxLGU)  
+
+
+## Notebooks
+
+Analysis was conducted accross two axes of granularity: 
+1. The annotation level (how many different cell types were annontated)
+    * L1 - 8 cell types
+    * L2 - 30 cell types
+2. The sample size
+    * Full dataset (161k cells)
+    * Subsamples: 10k, 25k
+
+The analysis for the different combinations is available in the corresponding notebooks:
+
+|| L1 | L2 | 
+|--|--|--|
+|10k|[Notebook](./notebooks/pipeline_validation_l1_10k.ipynb)|N/A|
+|25k|[Notebook](./notebooks/pipeline_validation_l1_25k.ipynb)|[Notebook](./notebooks/pipeline_validation_l2_10k.ipynb)|
+|Full dataset (161K)|[Notebook](./notebooks/pipeline_validation_l1_1161k.ipynb)|[Notebook*](./notebooks/pipeline_validation_l2_10k.ipynb)|
+
+\* Note: Functional annotation (GO enrichment) was only conducted on the L2/161K dataset. 
 
 ## Run locally 
 
@@ -81,8 +102,6 @@ $ ./run_validation_pipeline.py <parameters>
 # To see all available parameters:
 $ ./run_validation_pipeline.py -h
 ```
-
-
 ---
 
 ## Key design decisions
