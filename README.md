@@ -64,6 +64,9 @@ The analysis for the different combinations is available in the corresponding no
 
 \* Note: Functional annotation (GO enrichment) was only conducted on the L2/161K dataset. 
 
+## Run on cluster
+See [cluster_scripts/README.md](./cluster_scripts/README.md)
+
 ## Run locally 
 
 ### 1. Download the data
