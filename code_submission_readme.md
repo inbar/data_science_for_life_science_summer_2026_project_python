@@ -6,7 +6,7 @@ The rendered python scripts (pdf) are uploaded to the Whiteboard.
 Everything else can be found in the GitHub repo below. 
 
 ## Code 
-* Processing and application of statistical methods is done via standalone python scripts. 
+* Processing and application of statistical/ML methods is done via standalone python scripts. 
 * Analysis and plot generation done within python notebooks
 
 The entire codebase is available via GitHub:
